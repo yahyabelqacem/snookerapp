@@ -12,6 +12,7 @@ type GameState = {
   best1: number;
   best2: number;
   active: number;
+  timer_start: number;
 };
 
 export default function Display() {
@@ -22,7 +23,10 @@ export default function Display() {
     break1: 0, break2: 0,
     best1: 0, best2: 0,
     active: 0,
+    timer_start: Date.now(),
   });
+
+  const [elapsed, setElapsed] = useState("00:00");
 
   useEffect(() => {
     supabase.from("game_state").select("*").eq("id", 1).single()
@@ -40,6 +44,16 @@ export default function Display() {
     return () => { supabase.removeChannel(channel); };
   }, []);
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const diff = Math.floor((Date.now() - game.timer_start) / 1000);
+      const mins = Math.floor(diff / 60).toString().padStart(2, "0");
+      const secs = (diff % 60).toString().padStart(2, "0");
+      setElapsed(`${mins}:${secs}`);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [game.timer_start]);
+
   const diff = Math.abs(game.score1 - game.score2);
   const leader = game.score1 === game.score2 ? null : game.score1 > game.score2 ? 0 : 1;
   const names = [game.player1_name, game.player2_name];
@@ -47,13 +61,17 @@ export default function Display() {
   return (
     <div style={{ background: "#0d0d0f", minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "center", padding: "40px", fontFamily: "sans-serif" }}>
 
-      <div style={{ textAlign: "center", fontSize: 12, letterSpacing: 4, color: "#333", textTransform: "uppercase", marginBottom: 40 }}>
-        Snooker Score
+      <div style={{ textAlign: "center", marginBottom: 30 }}>
+        <div style={{ fontSize: 11, letterSpacing: 4, color: "#333", textTransform: "uppercase", marginBottom: 8 }}>
+          Snooker Score
+        </div>
+        <div style={{ fontSize: 42, fontWeight: 500, color: "#2a2a36", letterSpacing: 4, fontVariantNumeric: "tabular-nums" }}>
+          {elapsed}
+        </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 120px 1fr", gap: 20, alignItems: "center", marginBottom: 40 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 120px 1fr", gap: 20, alignItems: "center", marginBottom: 30 }}>
 
-        {/* Player 1 */}
         <div style={{ padding: "40px 20px", borderRadius: 20, textAlign: "center",
           background: game.active === 0 ? "#0d1a2e" : "#17171f",
           border: `3px solid ${game.active === 0 ? "#378ADD" : "#2a2a36"}` }}>
@@ -71,7 +89,6 @@ export default function Display() {
           </div>
         </div>
 
-        {/* Diff */}
         <div style={{ textAlign: "center" }}>
           <div style={{ fontSize: 10, color: "#2a2a36", textTransform: "uppercase", letterSpacing: 2, marginBottom: 8 }}>diff</div>
           <div style={{ fontSize: 48, fontWeight: 500, color: "#fff" }}>{diff}</div>
@@ -80,7 +97,6 @@ export default function Display() {
           </div>
         </div>
 
-        {/* Player 2 */}
         <div style={{ padding: "40px 20px", borderRadius: 20, textAlign: "center",
           background: game.active === 1 ? "#2a1008" : "#17171f",
           border: `3px solid ${game.active === 1 ? "#D85A30" : "#2a2a36"}` }}>

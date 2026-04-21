@@ -30,6 +30,7 @@ export default function Home() {
   const [name1, setName1] = useState("Player 1");
   const [name2, setName2] = useState("Player 2");
   const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [timerStart] = useState(Date.now());
 
   const breaksRef = useRef([0, 0]);
   const bestsRef = useRef([0, 0]);
@@ -37,7 +38,7 @@ export default function Home() {
   const names = [name1, name2];
 
   const syncToSupabase = async (
-    s: number[], b: number[], bs: number[], a: number, n1: string, n2: string
+    s: number[], b: number[], bs: number[], a: number, n1: string, n2: string, ts?: number
   ) => {
     await supabase.from("game_state").update({
       score1: s[0], score2: s[1],
@@ -45,6 +46,7 @@ export default function Home() {
       best1: bs[0], best2: bs[1],
       active: a,
       player1_name: n1, player2_name: n2,
+      timer_start: ts !== undefined ? ts : timerStart,
       updated_at: new Date().toISOString()
     }).eq("id", 1);
   };
@@ -134,6 +136,7 @@ export default function Home() {
   };
 
   const resetAll = () => {
+    const newStart = Date.now();
     breaksRef.current = [0, 0];
     bestsRef.current = [0, 0];
     setScores([0, 0]);
@@ -141,7 +144,7 @@ export default function Home() {
     setBests([0, 0]);
     setActiveState(0);
     setHistory([]);
-    syncToSupabase([0, 0], [0, 0], [0, 0], 0, name1, name2);
+    syncToSupabase([0, 0], [0, 0], [0, 0], 0, name1, name2, newStart);
   };
 
   const finDeFrame = () => {
