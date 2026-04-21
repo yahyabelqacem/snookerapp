@@ -46,14 +46,10 @@ export default function Display() {
 
   return (
     <div style={{ background: "#0d0d0f", minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "center", padding: "40px", fontFamily: "sans-serif" }}>
-
       <div style={{ textAlign: "center", fontSize: 12, letterSpacing: 4, color: "#333", textTransform: "uppercase", marginBottom: 40 }}>
         Snooker Score
       </div>
-
       <div style={{ display: "grid", gridTemplateColumns: "1fr 120px 1fr", gap: 20, alignItems: "center", marginBottom: 40 }}>
-
-        {/* Player 1 */}
         <div style={{ padding: "40px 20px", borderRadius: 20, textAlign: "center",
           background: game.active === 0 ? "#0d1a2e" : "#17171f",
           border: `3px solid ${game.active === 0 ? "#378ADD" : "#2a2a36"}` }}>
@@ -70,8 +66,6 @@ export default function Display() {
             Highest break: <b style={{ color: "#555" }}>{game.best1}</b>
           </div>
         </div>
-
-        {/* Diff */}
         <div style={{ textAlign: "center" }}>
           <div style={{ fontSize: 10, color: "#2a2a36", textTransform: "uppercase", letterSpacing: 2, marginBottom: 8 }}>diff</div>
           <div style={{ fontSize: 48, fontWeight: 500, color: "#fff" }}>{diff}</div>
@@ -79,8 +73,6 @@ export default function Display() {
             {leader === null ? "equal" : `${names[leader]} leads`}
           </div>
         </div>
-
-        {/* Player 2 */}
         <div style={{ padding: "40px 20px", borderRadius: 20, textAlign: "center",
           background: game.active === 1 ? "#2a1008" : "#17171f",
           border: `3px solid ${game.active === 1 ? "#D85A30" : "#2a2a36"}` }}>
@@ -97,9 +89,7 @@ export default function Display() {
             Highest break: <b style={{ color: "#555" }}>{game.best2}</b>
           </div>
         </div>
-
       </div>
-
       <div style={{ textAlign: "center", fontSize: 14, color: "#2a2a36", letterSpacing: 2, textTransform: "uppercase" }}>
         Active: <b style={{ color: "#444" }}>{names[game.active]}</b>
       </div>
