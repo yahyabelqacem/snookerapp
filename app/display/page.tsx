@@ -1,4 +1,7 @@
 "use client";
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "../lib/supabase";
 
@@ -49,7 +52,7 @@ export default function Display() {
     fetchAll();
 
     const channel = supabase
-      .channel("display_realtime")
+      .channel("display_realtime_v2")
       .on("postgres_changes", {
         event: "*", schema: "public", table: "game_state"
       }, (payload) => {
@@ -61,11 +64,7 @@ export default function Display() {
         supabase.from("queue").select("*").order("position")
           .then(({ data }) => { if (data) setQueue(data); });
       })
-      .subscribe((status) => {
-        if (status === "SUBSCRIBED") {
-          console.log("Realtime connected!");
-        }
-      });
+      .subscribe();
 
     return () => { supabase.removeChannel(channel); };
   }, []);
