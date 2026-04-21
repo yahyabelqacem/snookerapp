@@ -17,6 +17,12 @@ export default function History() {
     localStorage.setItem("snooker_frames", JSON.stringify(updated));
   };
 
+  const deleteFrame = (id: string) => {
+    const updated = frames.filter(f => f.id !== id);
+    setFrames(updated);
+    localStorage.setItem("snooker_frames", JSON.stringify(updated));
+  };
+
   const clearAll = () => {
     if (confirm("Wach bghiti t7yed ga3 l history?")) {
       localStorage.removeItem("snooker_frames");
@@ -64,10 +70,9 @@ export default function History() {
               <div key={f.id}
                 style={{ background: "#17171f", borderRadius: 12, padding: "14px 16px",
                   border: `1px solid ${f.paid ? "#1a2a1a" : "#3a1a1a"}`,
-                  display: "grid", gridTemplateColumns: "1fr auto", alignItems: "center", gap: 12 }}>
+                  display: "grid", gridTemplateColumns: "1fr auto auto", alignItems: "center", gap: 8 }}>
                 <div>
-                  <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 6 }}>
-                    {/* Winner */}
+                  <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 6, flexWrap: "wrap" }}>
                     <span style={{ fontSize: 11, background: "#0a1a0a", border: "1px solid #1a3a1a",
                       color: "#1D9E75", padding: "2px 8px", borderRadius: 6, letterSpacing: 1, textTransform: "uppercase" }}>
                       WIN
@@ -76,7 +81,6 @@ export default function History() {
                       {f.winner}
                     </span>
                     <span style={{ fontSize: 11, color: "#444" }}>{f.winnerScore} — {f.loserScore}</span>
-                    {/* Loser */}
                     <span style={{ fontSize: 12, color: "#E24B4A", letterSpacing: 1, textTransform: "uppercase", fontWeight: 500 }}>
                       {f.loser}
                     </span>
@@ -87,6 +91,7 @@ export default function History() {
                   </div>
                   <div style={{ fontSize: 10, color: "#333", letterSpacing: 0.5 }}>{f.date}</div>
                 </div>
+
                 <button onClick={() => togglePaid(f.id)}
                   style={{ padding: "8px 14px", borderRadius: 8,
                     border: `1px solid ${f.paid ? "#1a3a1a" : "#3a1a1a"}`,
@@ -94,6 +99,13 @@ export default function History() {
                     color: f.paid ? "#1D9E75" : "#E24B4A",
                     fontSize: 11, fontWeight: 500, cursor: "pointer", letterSpacing: 1, textTransform: "uppercase" }}>
                   {f.paid ? "Paid" : "Unpaid"}
+                </button>
+
+                <button onClick={() => deleteFrame(f.id)}
+                  style={{ padding: "8px 12px", borderRadius: 8,
+                    border: "1px solid #3a1a1a", background: "#1a0808",
+                    color: "#E24B4A", fontSize: 13, cursor: "pointer" }}>
+                  ✕
                 </button>
               </div>
             ))}
