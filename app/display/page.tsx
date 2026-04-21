@@ -79,8 +79,8 @@ export default function Display() {
         <div style={{ fontSize: 11, letterSpacing: 4, color: "#aaa", textTransform: "uppercase", marginBottom: 4 }}>
           Welcome to
         </div>
-        <div style={{ fontSize: 32, letterSpacing: 8, color: "#1D9E75", textTransform: "uppercase", fontWeight: 500, marginBottom: 16 }}>
-          JET7POOL
+        <div style={{ fontSize: 32, letterSpacing: 8, color: "#1D9E75", textTransform: "uppercase", fontWeight: 500, marginBottom: 16, fontStyle: "italic" }}>
+  JET7POOL
         </div>
         <div style={{ fontSize: 42, fontWeight: 500, color: "#fff", letterSpacing: 4, fontVariantNumeric: "tabular-nums" }}>
           {elapsed}
