@@ -67,12 +67,22 @@ export default function History() {
                   display: "grid", gridTemplateColumns: "1fr auto", alignItems: "center", gap: 12 }}>
                 <div>
                   <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 6 }}>
+                    {/* Winner */}
+                    <span style={{ fontSize: 11, background: "#0a1a0a", border: "1px solid #1a3a1a",
+                      color: "#1D9E75", padding: "2px 8px", borderRadius: 6, letterSpacing: 1, textTransform: "uppercase" }}>
+                      WIN
+                    </span>
                     <span style={{ fontSize: 12, color: "#1D9E75", letterSpacing: 1, textTransform: "uppercase", fontWeight: 500 }}>
                       {f.winner}
                     </span>
                     <span style={{ fontSize: 11, color: "#444" }}>{f.winnerScore} — {f.loserScore}</span>
+                    {/* Loser */}
                     <span style={{ fontSize: 12, color: "#E24B4A", letterSpacing: 1, textTransform: "uppercase", fontWeight: 500 }}>
                       {f.loser}
+                    </span>
+                    <span style={{ fontSize: 11, background: "#1a0808", border: "1px solid #3a1a1a",
+                      color: "#E24B4A", padding: "2px 8px", borderRadius: 6, letterSpacing: 1, textTransform: "uppercase" }}>
+                      LOSE
                     </span>
                   </div>
                   <div style={{ fontSize: 10, color: "#333", letterSpacing: 0.5 }}>{f.date}</div>
