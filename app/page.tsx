@@ -191,13 +191,17 @@ export default function Home() {
   };
 
   const confirmFinDeFrame = async () => {
+    // Winner = li 3ndo score kbar
     const winnerIdx = scores[0] > scores[1] ? 0 : 1;
     const loserIdx = winnerIdx === 0 ? 1 : 0;
+    const winnerName = names[winnerIdx];
+    const loserName = names[loserIdx];
 
+    // Save f history
     const frame: FrameResult = {
       id: Date.now().toString(),
-      winner: names[winnerIdx],
-      loser: names[loserIdx],
+      winner: winnerName,
+      loser: loserName,
       winnerScore: scores[winnerIdx],
       loserScore: scores[loserIdx],
       date: new Date().toLocaleString("fr-MA"),
@@ -207,15 +211,21 @@ export default function Home() {
     const existing: FrameResult[] = saved ? JSON.parse(saved) : [];
     localStorage.setItem("snooker_frames", JSON.stringify([...existing, frame]));
 
-    let newLoserName = names[loserIdx];
-    if (queue.length > 0) {
-      const next = queue[0];
-      newLoserName = next.name;
+    // Fetch fresh queue mn Supabase
+    const { data: freshQueue } = await supabase.from("queue").select("*").order("position");
+    const currentQueue = freshQueue || [];
+
+    // Next player = awal wahd f queue
+    let nextPlayerName = loserName; // ila ma kaynch queue — loser yb9a
+    if (currentQueue.length > 0) {
+      const next = currentQueue[0];
+      nextPlayerName = next.name;
       await supabase.from("queue").delete().eq("id", next.id);
     }
 
-    const newName1 = winnerIdx === 0 ? names[0] : newLoserName;
-    const newName2 = winnerIdx === 1 ? names[1] : newLoserName;
+    // Winner yb9a f blasto — next player ydkhel f blast loser
+    const newName1 = winnerIdx === 0 ? winnerName : nextPlayerName;
+    const newName2 = winnerIdx === 1 ? winnerName : nextPlayerName;
     const newStart = Date.now();
 
     breaksRef.current = [0, 0];
@@ -265,11 +275,11 @@ export default function Home() {
               {" "}wins{" "}
               {Math.max(scores[0], scores[1])} — {Math.min(scores[0], scores[1])}
             </div>
-            {queue.length > 0 && (
-              <div style={{ fontSize: 12, color: "#444", marginBottom: 20 }}>
-                Next: <span style={{ color: "#1D9E75" }}>{queue[0].name}</span> ydkhel
-              </div>
-            )}
+            <div style={{ fontSize: 12, color: "#444", marginBottom: 20 }}>
+              <span style={{ color: "#E24B4A" }}>{names[scores[0] > scores[1] ? 1 : 0]}</span>
+              {" "}ytbeddel b{" "}
+              <span style={{ color: "#1D9E75" }}>{queue.length > 0 ? queue[0].name : "—"}</span>
+            </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               <button onClick={() => setShowConfirm(false)}
                 style={{ padding: 12, borderRadius: 10, border: "1px solid #2a2a36",

@@ -84,7 +84,7 @@ export default function Display() {
           Waiting list
         </div>
         {queue.length === 0 ? (
-          <div style={{ fontSize: 12, color: "#333", letterSpacing: 1 }}>Ma kayn walo...</div>
+          <div style={{ fontSize: 12, color: "#333", letterSpacing: 1 }}>No one ...</div>
         ) : (
           queue.map((q, idx) => (
             <div key={q.id} style={{ display: "flex", alignItems: "center", gap: 10,
