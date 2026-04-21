@@ -143,10 +143,10 @@ export default function Display() {
       </div>
 
       {/* Main */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", padding: "40px" }}>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", padding: "40px" }}>
 
         {/* Logo */}
-        <div style={{ textAlign: "center", marginBottom: 20 }}>
+        <div style={{ textAlign: "center", marginBottom: 20, width: "100%" }}>
           <div style={{ fontSize: 11, letterSpacing: 4, color: "#aaa", textTransform: "uppercase", marginBottom: 8 }}>
             Welcome to
           </div>
@@ -157,12 +157,14 @@ export default function Display() {
               height: "clamp(60px, 8vw, 120px)",
               width: "auto",
               objectFit: "contain",
+              display: "block",
+              margin: "0 auto",
             }}
           />
         </div>
 
         {/* Scoreboard */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 120px 1fr", gap: 20, alignItems: "start", marginBottom: 24 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 120px 1fr", gap: 20, alignItems: "start", marginBottom: 24, width: "100%" }}>
 
           <div style={{ padding: "30px 20px", borderRadius: 20, textAlign: "center",
             background: game.active === 0 ? "rgba(13,26,46,0.85)" : "rgba(23,23,31,0.85)",
