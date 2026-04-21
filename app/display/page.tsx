@@ -41,9 +41,21 @@ export default function Display() {
   gameRef.current = game;
 
   const fetchAll = async () => {
-    const { data: g } = await supabase.from("game_state").select("*").eq("id", 1).single();
-    if (g) setGame(g);
-    const { data: q } = await supabase.from("queue").select("*").order("position");
+    const { data: g } = await supabase
+      .from("game_state")
+      .select("*")
+      .eq("id", 1)
+      .single();
+    if (g) {
+      setGame({
+        ...g,
+        last_balls: Array.isArray(g.last_balls) ? g.last_balls : [],
+      });
+    }
+    const { data: q } = await supabase
+      .from("queue")
+      .select("*")
+      .order("position");
     if (q) setQueue(q);
   };
 
@@ -70,7 +82,7 @@ export default function Display() {
   const diff = Math.abs(game.score1 - game.score2);
   const leader = game.score1 === game.score2 ? null : game.score1 > game.score2 ? 0 : 1;
   const names = [game.player1_name, game.player2_name];
-  const balls = game.last_balls || [];
+  const balls = Array.isArray(game.last_balls) ? game.last_balls : [];
 
   return (
     <div style={{
@@ -79,8 +91,10 @@ export default function Display() {
     }}>
 
       {/* Queue sidebar */}
-      <div style={{ width: 220, padding: "30px 16px", borderRight: "1px solid #1a1a1a",
-        background: "rgba(0,0,0,0.5)", display: "flex", flexDirection: "column", gap: 8 }}>
+      <div style={{
+        width: 220, padding: "30px 16px", borderRight: "1px solid #1a1a1a",
+        background: "rgba(0,0,0,0.5)", display: "flex", flexDirection: "column", gap: 8
+      }}>
         <div style={{ fontSize: 10, letterSpacing: 3, color: "#444", textTransform: "uppercase", marginBottom: 12 }}>
           Waiting list
         </div>
@@ -88,18 +102,24 @@ export default function Display() {
           <div style={{ fontSize: 12, color: "#333", letterSpacing: 1 }}>Ma kayn walo...</div>
         ) : (
           queue.map((q, idx) => (
-            <div key={q.id} style={{ display: "flex", alignItems: "center", gap: 10,
+            <div key={q.id} style={{
+              display: "flex", alignItems: "center", gap: 10,
               padding: "10px 12px", borderRadius: 10,
               background: idx === 0 ? "rgba(29,158,117,0.15)" : "rgba(255,255,255,0.03)",
-              border: `1px solid ${idx === 0 ? "#1D9E75" : "#1a1a1a"}` }}>
-              <div style={{ width: 26, height: 26, borderRadius: "50%",
+              border: `1px solid ${idx === 0 ? "#1D9E75" : "#1a1a1a"}`
+            }}>
+              <div style={{
+                width: 26, height: 26, borderRadius: "50%",
                 background: idx === 0 ? "#1D9E75" : "#2a2a36",
                 display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 12, fontWeight: 500, color: "#fff", flexShrink: 0 }}>
+                fontSize: 12, fontWeight: 500, color: "#fff", flexShrink: 0
+              }}>
                 {idx + 1}
               </div>
-              <div style={{ fontSize: 13, color: idx === 0 ? "#1D9E75" : "#666",
-                textTransform: "uppercase", letterSpacing: 1 }}>
+              <div style={{
+                fontSize: 13, color: idx === 0 ? "#1D9E75" : "#666",
+                textTransform: "uppercase", letterSpacing: 1
+              }}>
                 {q.name}
               </div>
             </div>
@@ -107,15 +127,18 @@ export default function Display() {
         )}
       </div>
 
-      {/* Main */}
+      {/* Main content */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", padding: "40px" }}>
 
+        {/* Header */}
         <div style={{ textAlign: "center", marginBottom: 20 }}>
           <div style={{ fontSize: 11, letterSpacing: 4, color: "#aaa", textTransform: "uppercase", marginBottom: 4 }}>
             Welcome to
           </div>
-          <div style={{ fontSize: 32, letterSpacing: 8, color: "#1D9E75", textTransform: "uppercase",
-            fontWeight: 500, fontStyle: "italic", marginBottom: 12 }}>
+          <div style={{
+            fontSize: 32, letterSpacing: 8, color: "#1D9E75", textTransform: "uppercase",
+            fontWeight: 500, fontStyle: "italic", marginBottom: 12
+          }}>
             JET7POOL
           </div>
           <div style={{ fontSize: 42, fontWeight: 500, color: "#fff", letterSpacing: 4, fontVariantNumeric: "tabular-nums" }}>
@@ -125,25 +148,50 @@ export default function Display() {
 
         {/* Balls ticker */}
         {balls.length > 0 && (
-          <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
+          <div style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: 10,
+            marginBottom: 20,
+            flexWrap: "wrap",
+            padding: "12px 24px",
+            background: "rgba(0,0,0,0.35)",
+            borderRadius: 20,
+            maxWidth: 600,
+            alignSelf: "center",
+            width: "100%",
+          }}>
             {balls.map((b, i) => (
               <div key={i} style={{
-                width: 28, height: 28, borderRadius: "50%",
+                width: 34,
+                height: 34,
+                borderRadius: "50%",
                 background: b.color,
-                border: "2px solid rgba(255,255,255,0.15)",
-                flexShrink: 0
+                border: "2px solid rgba(255,255,255,0.18)",
+                boxShadow: `0 0 10px ${b.color}88`,
+                flexShrink: 0,
               }} />
             ))}
           </div>
         )}
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 120px 1fr", gap: 20, alignItems: "center", marginBottom: 30 }}>
+        {/* Scores */}
+        <div style={{
+          display: "grid", gridTemplateColumns: "1fr 120px 1fr",
+          gap: 20, alignItems: "center", marginBottom: 30
+        }}>
 
-          <div style={{ padding: "40px 20px", borderRadius: 20, textAlign: "center",
+          <div style={{
+            padding: "40px 20px", borderRadius: 20, textAlign: "center",
             background: game.active === 0 ? "rgba(13,26,46,0.85)" : "rgba(23,23,31,0.85)",
-            border: `3px solid ${game.active === 0 ? "#378ADD" : "#2a2a36"}` }}>
-            <div style={{ fontSize: 18, letterSpacing: 3, color: game.active === 0 ? "#85B7EB" : "#555",
-              textTransform: "uppercase", marginBottom: 16 }}>
+            border: `3px solid ${game.active === 0 ? "#378ADD" : "#2a2a36"}`
+          }}>
+            <div style={{
+              fontSize: 18, letterSpacing: 3,
+              color: game.active === 0 ? "#85B7EB" : "#555",
+              textTransform: "uppercase", marginBottom: 16
+            }}>
               {game.player1_name}
             </div>
             <div style={{ fontSize: 120, fontWeight: 500, lineHeight: 1, color: "#fff", margin: "0 0 20px" }}>
@@ -165,11 +213,16 @@ export default function Display() {
             </div>
           </div>
 
-          <div style={{ padding: "40px 20px", borderRadius: 20, textAlign: "center",
+          <div style={{
+            padding: "40px 20px", borderRadius: 20, textAlign: "center",
             background: game.active === 1 ? "rgba(42,16,8,0.85)" : "rgba(23,23,31,0.85)",
-            border: `3px solid ${game.active === 1 ? "#D85A30" : "#2a2a36"}` }}>
-            <div style={{ fontSize: 18, letterSpacing: 3, color: game.active === 1 ? "#F0997B" : "#555",
-              textTransform: "uppercase", marginBottom: 16 }}>
+            border: `3px solid ${game.active === 1 ? "#D85A30" : "#2a2a36"}`
+          }}>
+            <div style={{
+              fontSize: 18, letterSpacing: 3,
+              color: game.active === 1 ? "#F0997B" : "#555",
+              textTransform: "uppercase", marginBottom: 16
+            }}>
               {game.player2_name}
             </div>
             <div style={{ fontSize: 120, fontWeight: 500, lineHeight: 1, color: "#fff", margin: "0 0 20px" }}>
