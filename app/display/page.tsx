@@ -97,10 +97,11 @@ export default function Display() {
         const realColor = getRealColor(b.color);
         return (
           <div key={i} style={{
-            width: 26, height: 26, borderRadius: "50%",
-            background: `radial-gradient(circle at 35% 35%, ${realColor}ee, ${realColor}88)`,
-            border: "2px solid rgba(255,255,255,0.25)",
-            boxShadow: `0 2px 6px rgba(0,0,0,0.5), inset 0 1px 2px rgba(255,255,255,0.2)`,
+            width: 28, height: 28, borderRadius: "50%",
+            background: `radial-gradient(circle at 35% 35%, white 2%, ${realColor}ff 40%, ${realColor}99 100%)`,
+            border: "2px solid rgba(255,255,255,0.4)",
+            boxShadow: `0 0 8px ${realColor}, 0 2px 6px rgba(0,0,0,0.5)`,
+            filter: "brightness(1.3) saturate(1.4)",
             flexShrink: 0
           }} />
         );
