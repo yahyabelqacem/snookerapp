@@ -1,6 +1,7 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { supabase } from "./lib/supabase";
 import { FrameResult } from "./types";
 
 const BALLS = [
@@ -33,8 +34,20 @@ export default function Home() {
   const breaksRef = useRef([0, 0]);
   const bestsRef = useRef([0, 0]);
   const router = useRouter();
-
   const names = [name1, name2];
+
+  const syncToSupabase = async (
+    s: number[], b: number[], bs: number[], a: number, n1: string, n2: string
+  ) => {
+    await supabase.from("game_state").update({
+      score1: s[0], score2: s[1],
+      break1: b[0], break2: b[1],
+      best1: bs[0], best2: bs[1],
+      active: a,
+      player1_name: n1, player2_name: n2,
+      updated_at: new Date().toISOString()
+    }).eq("id", 1);
+  };
 
   const addScore = (pts: number) => {
     const p = active;
@@ -47,8 +60,10 @@ export default function Home() {
       bestBefore: bestsRef.current[p],
       isEndBreak: false
     }]);
-    setScores(s => { const n = [...s]; n[p] += pts; return n; });
+    const newScores = scores.map((s, i) => i === p ? s + pts : s);
+    setScores(newScores);
     setBreaks([...newBreaks]);
+    syncToSupabase(newScores, newBreaks, bestsRef.current, active, name1, name2);
   };
 
   const addFoul = (pts: number) => {
@@ -62,8 +77,10 @@ export default function Home() {
       bestBefore: bestsRef.current[other],
       isEndBreak: false
     }]);
-    setScores(s => { const n = [...s]; n[other] += pts; return n; });
+    const newScores = scores.map((s, i) => i === other ? s + pts : s);
+    setScores(newScores);
     setBreaks([...newBreaks]);
+    syncToSupabase(newScores, newBreaks, bestsRef.current, active, name1, name2);
   };
 
   const switchPlayer = (to: number) => {
@@ -87,6 +104,7 @@ export default function Home() {
     setBests([...newBests]);
     setBreaks([...newBreaks]);
     setActiveState(to);
+    syncToSupabase(scores, newBreaks, newBests, to, name1, name2);
   };
 
   const undo = () => {
@@ -103,12 +121,15 @@ export default function Home() {
       setBreaks([...newBreaks]);
       setBests([...newBests]);
       setActiveState(last.player);
+      syncToSupabase(scores, newBreaks, newBests, last.player, name1, name2);
     } else {
-      setScores(s => { const n = [...s]; n[last.player] -= last.pts; return n; });
+      const newScores = scores.map((s, i) => i === last.player ? s - last.pts : s);
       const newBreaks = [...breaksRef.current];
       newBreaks[last.player] = last.breakBefore;
       breaksRef.current = newBreaks;
+      setScores(newScores);
       setBreaks([...newBreaks]);
+      syncToSupabase(newScores, newBreaks, bestsRef.current, active, name1, name2);
     }
   };
 
@@ -120,6 +141,7 @@ export default function Home() {
     setBests([0, 0]);
     setActiveState(0);
     setHistory([]);
+    syncToSupabase([0, 0], [0, 0], [0, 0], 0, name1, name2);
   };
 
   const finDeFrame = () => {
@@ -148,28 +170,27 @@ export default function Home() {
   return (
     <div style={{ background: "#0d0d0f", minHeight: "100vh", padding: "28px 24px", fontFamily: "sans-serif" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", maxWidth: 900, margin: "0 auto 24px" }}>
-        <h2 style={{ fontSize: 13, letterSpacing: 3, color: "#4a4a5a", textTransform: "uppercase" }}>
-          Snooker Score
-        </h2>
-        <button onClick={() => router.push("/history")}
-          style={{ background: "transparent", border: "1px solid #2a2a36", borderRadius: 8,
-            color: "#555", fontSize: 12, cursor: "pointer", padding: "6px 12px", letterSpacing: 1 }}>
-          History
-        </button>
+        <h2 style={{ fontSize: 13, letterSpacing: 3, color: "#4a4a5a", textTransform: "uppercase" }}>Snooker Score</h2>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button onClick={() => router.push("/display")}
+            style={{ background: "transparent", border: "1px solid #2a2a36", borderRadius: 8, color: "#555", fontSize: 12, cursor: "pointer", padding: "6px 12px", letterSpacing: 1 }}>
+            TV Display
+          </button>
+          <button onClick={() => router.push("/history")}
+            style={{ background: "transparent", border: "1px solid #2a2a36", borderRadius: 8, color: "#555", fontSize: 12, cursor: "pointer", padding: "6px 12px", letterSpacing: 1 }}>
+            History
+          </button>
+        </div>
       </div>
 
-      {/* Scoreboard */}
       <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) 80px minmax(0,1fr)", gap: 12, alignItems: "center", maxWidth: 900, margin: "0 auto 20px" }}>
-
         <div onClick={() => switchPlayer(0)}
           style={{ padding: "20px 12px", borderRadius: 14, textAlign: "center", cursor: "pointer",
             background: active === 0 ? "#0d1a2e" : "#17171f",
             border: `2px solid ${active === 0 ? "#378ADD" : "#2a2a36"}` }}>
-          <input value={name1} onChange={e => setName1(e.target.value)}
+          <input value={name1} onChange={e => { setName1(e.target.value); syncToSupabase(scores, breaks, bests, active, e.target.value, name2); }}
             onClick={e => e.stopPropagation()}
-            style={{ background: "transparent", border: "none", outline: "none", textAlign: "center",
-              fontSize: 13, fontWeight: 500, width: "100%", letterSpacing: 2,
-              textTransform: "uppercase", color: active === 0 ? "#85B7EB" : "#aaa" }} />
+            style={{ background: "transparent", border: "none", outline: "none", textAlign: "center", fontSize: 13, fontWeight: 500, width: "100%", letterSpacing: 2, textTransform: "uppercase", color: active === 0 ? "#85B7EB" : "#aaa" }} />
           <div style={{ fontSize: 64, fontWeight: 500, lineHeight: 1, color: "#fff", margin: "8px 0" }}>{scores[0]}</div>
           <div style={{ fontSize: 12, color: "#555", marginTop: 8 }}>Break: <b style={{ color: "#888" }}>{breaks[0]}</b></div>
           <div style={{ fontSize: 11, color: "#444", marginTop: 4 }}>Highest break: <b style={{ color: "#666" }}>{bests[0]}</b></div>
@@ -187,23 +208,19 @@ export default function Home() {
           style={{ padding: "20px 12px", borderRadius: 14, textAlign: "center", cursor: "pointer",
             background: active === 1 ? "#2a1008" : "#17171f",
             border: `2px solid ${active === 1 ? "#D85A30" : "#2a2a36"}` }}>
-          <input value={name2} onChange={e => setName2(e.target.value)}
+          <input value={name2} onChange={e => { setName2(e.target.value); syncToSupabase(scores, breaks, bests, active, name1, e.target.value); }}
             onClick={e => e.stopPropagation()}
-            style={{ background: "transparent", border: "none", outline: "none", textAlign: "center",
-              fontSize: 13, fontWeight: 500, width: "100%", letterSpacing: 2,
-              textTransform: "uppercase", color: active === 1 ? "#F0997B" : "#aaa" }} />
+            style={{ background: "transparent", border: "none", outline: "none", textAlign: "center", fontSize: 13, fontWeight: 500, width: "100%", letterSpacing: 2, textTransform: "uppercase", color: active === 1 ? "#F0997B" : "#aaa" }} />
           <div style={{ fontSize: 64, fontWeight: 500, lineHeight: 1, color: "#fff", margin: "8px 0" }}>{scores[1]}</div>
           <div style={{ fontSize: 12, color: "#555", marginTop: 8 }}>Break: <b style={{ color: "#888" }}>{breaks[1]}</b></div>
           <div style={{ fontSize: 11, color: "#444", marginTop: 4 }}>Highest break: <b style={{ color: "#666" }}>{bests[1]}</b></div>
         </div>
-
       </div>
 
       <p style={{ textAlign: "center", fontSize: 12, color: "#444", letterSpacing: 1, textTransform: "uppercase", margin: "0 auto 18px", maxWidth: 900 }}>
         Active: <b style={{ color: "#aaa" }}>{names[active]}</b>
       </p>
 
-      {/* Balls */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, maxWidth: 900, margin: "0 auto 10px" }}>
         {BALLS.map(b => (
           <button key={b.name} onClick={() => addScore(b.pts)}
@@ -215,7 +232,6 @@ export default function Home() {
         ))}
       </div>
 
-      {/* Fin de Frame */}
       <div style={{ maxWidth: 900, margin: "0 auto 10px" }}>
         <button onClick={finDeFrame}
           style={{ width: "100%", padding: 14, borderRadius: 10,
@@ -227,7 +243,6 @@ export default function Home() {
         </button>
       </div>
 
-      {/* Fouls */}
       <div style={{ maxWidth: 900, margin: "0 auto 8px" }}>
         <div style={{ fontSize: 9, color: "#442222", textTransform: "uppercase", letterSpacing: 2, textAlign: "center", marginBottom: 6 }}>
           Foul — {names[active === 0 ? 1 : 0]} yakhod
@@ -244,16 +259,13 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Undo + Reset */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, maxWidth: 900, margin: "0 auto" }}>
         <button onClick={undo}
-          style={{ padding: 13, borderRadius: 10, border: "1px solid #2a2a36", background: "#17171f",
-            color: "#888", fontSize: 13, cursor: "pointer", letterSpacing: 0.5 }}>
+          style={{ padding: 13, borderRadius: 10, border: "1px solid #2a2a36", background: "#17171f", color: "#888", fontSize: 13, cursor: "pointer", letterSpacing: 0.5 }}>
           Undo
         </button>
         <button onClick={resetAll}
-          style={{ padding: 13, borderRadius: 10, border: "1px solid #2a2a36", background: "#17171f",
-            color: "#888", fontSize: 13, cursor: "pointer", letterSpacing: 0.5 }}>
+          style={{ padding: 13, borderRadius: 10, border: "1px solid #2a2a36", background: "#17171f", color: "#888", fontSize: 13, cursor: "pointer", letterSpacing: 0.5 }}>
           Reset
         </button>
       </div>
