@@ -145,21 +145,25 @@ export default function Display() {
       {/* Main */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", padding: "40px" }}>
 
-        {/* Header */}
-        <div style={{ textAlign: "center", marginBottom: 24 }}>
-          <div style={{ fontSize: 11, letterSpacing: 4, color: "#aaa", textTransform: "uppercase", marginBottom: 4 }}>
+        {/* Logo */}
+        <div style={{ textAlign: "center", marginBottom: 20 }}>
+          <div style={{ fontSize: 11, letterSpacing: 4, color: "#aaa", textTransform: "uppercase", marginBottom: 8 }}>
             Welcome to
           </div>
-          <div style={{ fontSize: 32, letterSpacing: 8, color: "#1D9E75", textTransform: "uppercase",
-            fontWeight: 500, fontStyle: "italic" }}>
-            JET7POOL
-          </div>
+          <img
+            src="/logo.png"
+            alt="JET7POOL"
+            style={{
+              height: "clamp(60px, 8vw, 120px)",
+              width: "auto",
+              objectFit: "contain",
+            }}
+          />
         </div>
 
         {/* Scoreboard */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 120px 1fr", gap: 20, alignItems: "start", marginBottom: 24 }}>
 
-          {/* Player 1 */}
           <div style={{ padding: "30px 20px", borderRadius: 20, textAlign: "center",
             background: game.active === 0 ? "rgba(13,26,46,0.85)" : "rgba(23,23,31,0.85)",
             border: `3px solid ${game.active === 0 ? "#378ADD" : "#2a2a36"}` }}>
@@ -179,7 +183,6 @@ export default function Display() {
             </div>
           </div>
 
-          {/* Diff */}
           <div style={{ textAlign: "center", paddingTop: 40 }}>
             <div style={{ fontSize: 10, color: "#555", textTransform: "uppercase", letterSpacing: 2, marginBottom: 8 }}>diff</div>
             <div style={{ fontSize: 48, fontWeight: 500, color: "#fff" }}>{diff}</div>
@@ -188,7 +191,6 @@ export default function Display() {
             </div>
           </div>
 
-          {/* Player 2 */}
           <div style={{ padding: "30px 20px", borderRadius: 20, textAlign: "center",
             background: game.active === 1 ? "rgba(42,16,8,0.85)" : "rgba(23,23,31,0.85)",
             border: `3px solid ${game.active === 1 ? "#D85A30" : "#2a2a36"}` }}>
