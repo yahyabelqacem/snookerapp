@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "./lib/supabase";
 import { FrameResult } from "./types";
@@ -37,6 +37,23 @@ export default function Home() {
   const bestsRef = useRef([0, 0]);
   const router = useRouter();
   const names = [name1, name2];
+
+  useEffect(() => {
+    supabase.from("game_state").select("*").eq("id", 1).single()
+      .then(({ data }) => {
+        if (data) {
+          setScores([data.score1, data.score2]);
+          setBreaks([data.break1, data.break2]);
+          setBests([data.best1, data.best2]);
+          setActiveState(data.active);
+          setName1(data.player1_name);
+          setName2(data.player2_name);
+          setTimerStart(data.timer_start || Date.now());
+          breaksRef.current = [data.break1, data.break2];
+          bestsRef.current = [data.best1, data.best2];
+        }
+      });
+  }, []);
 
   const syncToSupabase = async (
     s: number[], b: number[], bs: number[], a: number, n1: string, n2: string, ts?: number
