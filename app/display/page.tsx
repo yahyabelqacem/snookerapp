@@ -23,7 +23,7 @@ export default function Display() {
     break1: 0, break2: 0,
     best1: 0, best2: 0,
     active: 0,
-    timer_start: Date.now(),
+    timer_start: 0,
   });
 
   const [elapsed, setElapsed] = useState("00:00");
@@ -46,7 +46,16 @@ export default function Display() {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      const diff = Math.floor((Date.now() - game.timer_start) / 1000);
+      const ts = game.timer_start;
+      if (!ts || ts <= 0) {
+        setElapsed("00:00");
+        return;
+      }
+      const diff = Math.floor((Date.now() - ts) / 1000);
+      if (diff < 0) {
+        setElapsed("00:00");
+        return;
+      }
       const mins = Math.floor(diff / 60).toString().padStart(2, "0");
       const secs = (diff % 60).toString().padStart(2, "0");
       setElapsed(`${mins}:${secs}`);
