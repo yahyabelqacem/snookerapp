@@ -185,27 +185,15 @@ export default function Home() {
     }
   };
 
-  const resetAll = () => {
-    const newStart = Date.now();
-    setTimerStart(newStart);
-    breaksRef.current = [0, 0];
-    bestsRef.current = [0, 0];
-    setScores([0, 0]);
-    setBreaks([0, 0]);
-    setBests([0, 0]);
-    setActiveState(0);
-    setHistory([]);
-    syncToSupabase([0, 0], [0, 0], [0, 0], 0, name1, name2, newStart);
-  };
-
   const finDeFrame = () => {
     if (scores[0] === scores[1]) return;
     setShowConfirm(true);
   };
 
-  const confirmFinDeFrame = () => {
+  const confirmFinDeFrame = async () => {
     const winnerIdx = scores[0] > scores[1] ? 0 : 1;
     const loserIdx = winnerIdx === 0 ? 1 : 0;
+
     const frame: FrameResult = {
       id: Date.now().toString(),
       winner: names[winnerIdx],
@@ -218,9 +206,32 @@ export default function Home() {
     const saved = localStorage.getItem("snooker_frames");
     const existing: FrameResult[] = saved ? JSON.parse(saved) : [];
     localStorage.setItem("snooker_frames", JSON.stringify([...existing, frame]));
+
+    // L winner yb9a — l loser ytbeddel b awal wahd f queue
+    let newLoserName = names[loserIdx];
+    if (queue.length > 0) {
+      const next = queue[0];
+      newLoserName = next.name;
+      await supabase.from("queue").delete().eq("id", next.id);
+    }
+
+    const newName1 = winnerIdx === 0 ? names[0] : newLoserName;
+    const newName2 = winnerIdx === 1 ? names[1] : newLoserName;
+
+    const newStart = Date.now();
+    setTimerStart(newStart);
+    breaksRef.current = [0, 0];
+    bestsRef.current = [0, 0];
+    setScores([0, 0]);
+    setBreaks([0, 0]);
+    setBests([0, 0]);
+    setActiveState(0);
+    setHistory([]);
+    setName1(newName1);
+    setName2(newName2);
     setShowConfirm(false);
-    resetAll();
-    router.push("/history");
+
+    await syncToSupabase([0, 0], [0, 0], [0, 0], 0, newName1, newName2, newStart);
   };
 
   const diff = Math.abs(scores[0] - scores[1]);
@@ -239,13 +250,18 @@ export default function Home() {
             <div style={{ fontSize: 16, color: "#fff", marginBottom: 8, letterSpacing: 1, textTransform: "uppercase" }}>
               Fin de Frame?
             </div>
-            <div style={{ fontSize: 13, color: "#555", marginBottom: 24 }}>
+            <div style={{ fontSize: 13, color: "#555", marginBottom: 8 }}>
               <span style={{ color: "#1D9E75", fontWeight: 500 }}>
                 {names[scores[0] > scores[1] ? 0 : 1]}
               </span>
               {" "}wins{" "}
               {Math.max(scores[0], scores[1])} — {Math.min(scores[0], scores[1])}
             </div>
+            {queue.length > 0 && (
+              <div style={{ fontSize: 12, color: "#444", marginBottom: 20 }}>
+                Next: <span style={{ color: "#1D9E75" }}>{queue[0].name}</span> ydkhel
+              </div>
+            )}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               <button onClick={() => setShowConfirm(false)}
                 style={{ padding: 12, borderRadius: 10, border: "1px solid #2a2a36",
