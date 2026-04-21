@@ -28,9 +28,7 @@ type QueueEntry = {
   position: number;
 };
 
-type BallEntry = {
-  color: string;
-};
+type BallEntry = { color: string };
 
 export default function Home() {
   const [scores, setScores] = useState([0, 0]);
@@ -45,11 +43,11 @@ export default function Home() {
   const [queue, setQueue] = useState<QueueEntry[]>([]);
   const [queueName, setQueueName] = useState("");
   const [showQueue, setShowQueue] = useState(false);
-  const [lastBalls, setLastBalls] = useState<BallEntry[]>([]);
 
   const breaksRef = useRef([0, 0]);
   const bestsRef = useRef([0, 0]);
-  const lastBallsRef = useRef<BallEntry[]>([]);
+  const balls1Ref = useRef<BallEntry[]>([]);
+  const balls2Ref = useRef<BallEntry[]>([]);
   const router = useRouter();
   const names = [name1, name2];
 
@@ -66,10 +64,8 @@ export default function Home() {
           setTimerStart(data.timer_start || Date.now());
           breaksRef.current = [data.break1, data.break2];
           bestsRef.current = [data.best1, data.best2];
-          if (data.last_balls) {
-            setLastBalls(data.last_balls);
-            lastBallsRef.current = data.last_balls;
-          }
+          balls1Ref.current = Array.isArray(data.balls1) ? data.balls1 : [];
+          balls2Ref.current = Array.isArray(data.balls2) ? data.balls2 : [];
         }
       });
 
@@ -98,7 +94,8 @@ export default function Home() {
   };
 
   const syncToSupabase = async (
-    s: number[], b: number[], bs: number[], a: number, n1: string, n2: string, ts?: number, balls?: BallEntry[]
+    s: number[], b: number[], bs: number[], a: number, n1: string, n2: string,
+    ts?: number, b1?: BallEntry[], b2?: BallEntry[]
   ) => {
     await supabase.from("game_state").update({
       score1: s[0], score2: s[1],
@@ -107,7 +104,8 @@ export default function Home() {
       active: a,
       player1_name: n1, player2_name: n2,
       timer_start: ts !== undefined ? ts : timerStart,
-      last_balls: balls !== undefined ? balls : lastBallsRef.current,
+      balls1: b1 !== undefined ? b1 : balls1Ref.current,
+      balls2: b2 !== undefined ? b2 : balls2Ref.current,
       updated_at: new Date().toISOString()
     }).eq("id", 1);
   };
@@ -115,9 +113,13 @@ export default function Home() {
   const addScore = (pts: number) => {
     const p = active;
     const ball = BALLS.find(b => b.pts === pts);
-    const newBalls = [...lastBallsRef.current, { color: ball?.color || "#fff" }];
-    lastBallsRef.current = newBalls;
-    setLastBalls([...newBalls]);
+    const newBall = { color: ball?.color || "#fff" };
+
+    if (p === 0) {
+      balls1Ref.current = [...balls1Ref.current, newBall];
+    } else {
+      balls2Ref.current = [...balls2Ref.current, newBall];
+    }
 
     const newBreaks = [...breaksRef.current];
     newBreaks[p] += pts;
@@ -131,7 +133,7 @@ export default function Home() {
     const newScores = scores.map((s, i) => i === p ? s + pts : s);
     setScores(newScores);
     setBreaks([...newBreaks]);
-    syncToSupabase(newScores, newBreaks, bestsRef.current, active, name1, name2, undefined, newBalls);
+    syncToSupabase(newScores, newBreaks, bestsRef.current, active, name1, name2);
   };
 
   const addFoul = (pts: number) => {
@@ -172,7 +174,6 @@ export default function Home() {
     setBests([...newBests]);
     setBreaks([...newBreaks]);
     setActiveState(to);
-    // Khli last_balls — mabadlawch
     syncToSupabase(scores, newBreaks, newBests, to, name1, name2);
   };
 
@@ -196,12 +197,16 @@ export default function Home() {
       const newBreaks = [...breaksRef.current];
       newBreaks[last.player] = last.breakBefore;
       breaksRef.current = newBreaks;
-      const newBalls = lastBallsRef.current.slice(0, -1);
-      lastBallsRef.current = newBalls;
-      setLastBalls([...newBalls]);
+
+      if (last.player === 0) {
+        balls1Ref.current = balls1Ref.current.slice(0, -1);
+      } else {
+        balls2Ref.current = balls2Ref.current.slice(0, -1);
+      }
+
       setScores(newScores);
       setBreaks([...newBreaks]);
-      syncToSupabase(newScores, newBreaks, bestsRef.current, active, name1, name2, undefined, newBalls);
+      syncToSupabase(newScores, newBreaks, bestsRef.current, active, name1, name2);
     }
   };
 
@@ -210,14 +215,14 @@ export default function Home() {
     setTimerStart(newStart);
     breaksRef.current = [0, 0];
     bestsRef.current = [0, 0];
-    lastBallsRef.current = [];
+    balls1Ref.current = [];
+    balls2Ref.current = [];
     setScores([0, 0]);
     setBreaks([0, 0]);
     setBests([0, 0]);
-    setLastBalls([]);
     setActiveState(0);
     setHistory([]);
-    syncToSupabase([0, 0], [0, 0], [0, 0], 0, name1, name2, newStart, []);
+    syncToSupabase([0, 0], [0, 0], [0, 0], 0, name1, name2, newStart, [], []);
   };
 
   const finDeFrame = () => {
@@ -260,13 +265,13 @@ export default function Home() {
 
     breaksRef.current = [0, 0];
     bestsRef.current = [0, 0];
-    lastBallsRef.current = [];
+    balls1Ref.current = [];
+    balls2Ref.current = [];
 
     setShowConfirm(false);
     setScores([0, 0]);
     setBreaks([0, 0]);
     setBests([0, 0]);
-    setLastBalls([]);
     setActiveState(0);
     setHistory([]);
     setName1(newName1);
@@ -281,7 +286,7 @@ export default function Home() {
       player1_name: newName1,
       player2_name: newName2,
       timer_start: newStart,
-      last_balls: [],
+      balls1: [], balls2: [],
       updated_at: new Date().toISOString()
     }).eq("id", 1);
   };

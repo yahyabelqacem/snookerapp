@@ -13,7 +13,8 @@ type GameState = {
   best2: number;
   active: number;
   timer_start: number;
-  last_balls: { color: string }[];
+  balls1: { color: string }[];
+  balls2: { color: string }[];
 };
 
 type QueueEntry = {
@@ -31,7 +32,8 @@ export default function Display() {
     best1: 0, best2: 0,
     active: 0,
     timer_start: 0,
-    last_balls: [],
+    balls1: [],
+    balls2: [],
   });
 
   const [queue, setQueue] = useState<QueueEntry[]>([]);
@@ -42,7 +44,11 @@ export default function Display() {
 
   const fetchAll = async () => {
     const { data: g } = await supabase.from("game_state").select("*").eq("id", 1).single();
-    if (g) setGame({ ...g, last_balls: Array.isArray(g.last_balls) ? g.last_balls : [] });
+    if (g) setGame({
+      ...g,
+      balls1: Array.isArray(g.balls1) ? g.balls1 : [],
+      balls2: Array.isArray(g.balls2) ? g.balls2 : [],
+    });
     const { data: q } = await supabase.from("queue").select("*").order("position");
     if (q) setQueue(q);
   };
@@ -70,7 +76,21 @@ export default function Display() {
   const diff = Math.abs(game.score1 - game.score2);
   const leader = game.score1 === game.score2 ? null : game.score1 > game.score2 ? 0 : 1;
   const names = [game.player1_name, game.player2_name];
-  const balls = Array.isArray(game.last_balls) ? game.last_balls : [];
+  const balls1 = Array.isArray(game.balls1) ? game.balls1 : [];
+  const balls2 = Array.isArray(game.balls2) ? game.balls2 : [];
+
+  const BallsRow = ({ balls }: { balls: { color: string }[] }) => (
+    <div style={{ display: "flex", justifyContent: "center", gap: 6, marginBottom: 12, flexWrap: "wrap" }}>
+      {balls.map((b, i) => (
+        <div key={i} style={{
+          width: 22, height: 22, borderRadius: "50%",
+          background: b.color,
+          border: "2px solid rgba(255,255,255,0.2)",
+          flexShrink: 0
+        }} />
+      ))}
+    </div>
+  );
 
   return (
     <div style={{
@@ -108,7 +128,6 @@ export default function Display() {
       {/* Main */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", padding: "40px" }}>
 
-        {/* Header */}
         <div style={{ textAlign: "center", marginBottom: 24 }}>
           <div style={{ fontSize: 11, letterSpacing: 4, color: "#aaa", textTransform: "uppercase", marginBottom: 4 }}>
             Welcome to
@@ -122,7 +141,6 @@ export default function Display() {
           </div>
         </div>
 
-        {/* Scoreboard */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 120px 1fr", gap: 20, alignItems: "start", marginBottom: 30 }}>
 
           {/* Player 1 */}
@@ -133,19 +151,7 @@ export default function Display() {
               textTransform: "uppercase", marginBottom: 12 }}>
               {game.player1_name}
             </div>
-            {/* Balls taht smiya dyal player 1 */}
-            {game.active === 0 && balls.length > 0 && (
-              <div style={{ display: "flex", justifyContent: "center", gap: 6, marginBottom: 12, flexWrap: "wrap" }}>
-                {balls.map((b, i) => (
-                  <div key={i} style={{
-                    width: 22, height: 22, borderRadius: "50%",
-                    background: b.color,
-                    border: "2px solid rgba(255,255,255,0.2)",
-                    flexShrink: 0
-                  }} />
-                ))}
-              </div>
-            )}
+            {balls1.length > 0 && <BallsRow balls={balls1} />}
             <div style={{ fontSize: 110, fontWeight: 500, lineHeight: 1, color: "#fff", margin: "0 0 16px" }}>
               {game.score1}
             </div>
@@ -174,19 +180,7 @@ export default function Display() {
               textTransform: "uppercase", marginBottom: 12 }}>
               {game.player2_name}
             </div>
-            {/* Balls taht smiya dyal player 2 */}
-            {game.active === 1 && balls.length > 0 && (
-              <div style={{ display: "flex", justifyContent: "center", gap: 6, marginBottom: 12, flexWrap: "wrap" }}>
-                {balls.map((b, i) => (
-                  <div key={i} style={{
-                    width: 22, height: 22, borderRadius: "50%",
-                    background: b.color,
-                    border: "2px solid rgba(255,255,255,0.2)",
-                    flexShrink: 0
-                  }} />
-                ))}
-              </div>
-            )}
+            {balls2.length > 0 && <BallsRow balls={balls2} />}
             <div style={{ fontSize: 110, fontWeight: 500, lineHeight: 1, color: "#fff", margin: "0 0 16px" }}>
               {game.score2}
             </div>
