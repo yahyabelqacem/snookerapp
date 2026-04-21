@@ -237,6 +237,10 @@ export default function Home() {
             style={{ background: "transparent", border: "1px solid #2a2a36", borderRadius: 8, color: "#555", fontSize: 12, cursor: "pointer", padding: "6px 12px", letterSpacing: 1 }}>
             TV Display
           </button>
+          <button onClick={() => router.push("/queue")}
+            style={{ background: "transparent", border: "1px solid #2a2a36", borderRadius: 8, color: "#555", fontSize: 12, cursor: "pointer", padding: "6px 12px", letterSpacing: 1 }}>
+            Queue
+          </button>
           <button onClick={() => router.push("/history")}
             style={{ background: "transparent", border: "1px solid #2a2a36", borderRadius: 8, color: "#555", fontSize: 12, cursor: "pointer", padding: "6px 12px", letterSpacing: 1 }}>
             History
@@ -333,7 +337,6 @@ export default function Home() {
           Fin de Frame
         </button>
       </div>
-
     </div>
   );
 }
