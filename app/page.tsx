@@ -299,17 +299,6 @@ export default function Home() {
         ))}
       </div>
 
-      <div style={{ maxWidth: 900, margin: "0 auto 10px" }}>
-        <button onClick={finDeFrame}
-          style={{ width: "100%", padding: 14, borderRadius: 10,
-            border: `1px solid ${scores[0] !== scores[1] ? "#1a3a1a" : "#2a2a36"}`,
-            background: scores[0] !== scores[1] ? "#0a1a0a" : "#17171f",
-            color: scores[0] !== scores[1] ? "#1D9E75" : "#444",
-            fontSize: 14, fontWeight: 500, cursor: "pointer", letterSpacing: 1, textTransform: "uppercase" }}>
-          Fin de Frame
-        </button>
-      </div>
-
       <div style={{ maxWidth: 900, margin: "0 auto 8px" }}>
         <div style={{ fontSize: 9, color: "#442222", textTransform: "uppercase", letterSpacing: 2, textAlign: "center", marginBottom: 6 }}>
           Foul — {names[active === 0 ? 1 : 0]} yakhod
@@ -326,11 +315,22 @@ export default function Home() {
         </div>
       </div>
 
-      <div style={{ maxWidth: 900, margin: "0 auto" }}>
+      <div style={{ maxWidth: 900, margin: "0 auto 8px" }}>
         <button onClick={undo}
           style={{ width: "100%", padding: 13, borderRadius: 10, border: "1px solid #2a2a36",
             background: "#17171f", color: "#888", fontSize: 13, cursor: "pointer", letterSpacing: 0.5 }}>
           Undo
+        </button>
+      </div>
+
+      <div style={{ maxWidth: 900, margin: "0 auto" }}>
+        <button onClick={finDeFrame}
+          style={{ width: "100%", padding: 14, borderRadius: 10,
+            border: `1px solid ${scores[0] !== scores[1] ? "#1a3a1a" : "#2a2a36"}`,
+            background: scores[0] !== scores[1] ? "#0a1a0a" : "#17171f",
+            color: scores[0] !== scores[1] ? "#1D9E75" : "#444",
+            fontSize: 14, fontWeight: 500, cursor: "pointer", letterSpacing: 1, textTransform: "uppercase" }}>
+          Fin de Frame
         </button>
       </div>
 
