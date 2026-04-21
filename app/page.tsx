@@ -22,6 +22,12 @@ type HistoryEntry = {
   isEndBreak: boolean;
 };
 
+type QueueEntry = {
+  id: number;
+  name: string;
+  position: number;
+};
+
 export default function Home() {
   const [scores, setScores] = useState([0, 0]);
   const [breaks, setBreaks] = useState([0, 0]);
@@ -32,6 +38,9 @@ export default function Home() {
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [timerStart, setTimerStart] = useState(Date.now());
   const [showConfirm, setShowConfirm] = useState(false);
+  const [queue, setQueue] = useState<QueueEntry[]>([]);
+  const [queueName, setQueueName] = useState("");
+  const [showQueue, setShowQueue] = useState(false);
 
   const breaksRef = useRef([0, 0]);
   const bestsRef = useRef([0, 0]);
@@ -53,7 +62,30 @@ export default function Home() {
           bestsRef.current = [data.best1, data.best2];
         }
       });
+
+    fetchQueue();
+    const channel = supabase
+      .channel("queue_changes")
+      .on("postgres_changes", { event: "*", schema: "public", table: "queue" }, () => fetchQueue())
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
   }, []);
+
+  const fetchQueue = async () => {
+    const { data } = await supabase.from("queue").select("*").order("position");
+    if (data) setQueue(data);
+  };
+
+  const joinQueue = async () => {
+    if (!queueName.trim()) return;
+    const maxPos = queue.length > 0 ? Math.max(...queue.map(q => q.position)) : 0;
+    await supabase.from("queue").insert({ name: queueName.trim(), position: maxPos + 1 });
+    setQueueName("");
+  };
+
+  const leaveQueue = async (id: number) => {
+    await supabase.from("queue").delete().eq("id", id);
+  };
 
   const syncToSupabase = async (
     s: number[], b: number[], bs: number[], a: number, n1: string, n2: string, ts?: number
@@ -197,6 +229,7 @@ export default function Home() {
   return (
     <div style={{ background: "#0d0d0f", minHeight: "100vh", padding: "28px 24px", fontFamily: "sans-serif" }}>
 
+      {/* Confirm popup */}
       {showConfirm && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
           background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center",
@@ -230,6 +263,64 @@ export default function Home() {
         </div>
       )}
 
+      {/* Queue popup */}
+      {showQueue && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+          background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center",
+          justifyContent: "center", zIndex: 999 }}>
+          <div style={{ background: "#17171f", borderRadius: 16, padding: 24, maxWidth: 380, width: "90%",
+            border: "1px solid #2a2a36" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <div style={{ fontSize: 13, color: "#aaa", letterSpacing: 2, textTransform: "uppercase" }}>Waiting list</div>
+              <button onClick={() => setShowQueue(false)}
+                style={{ background: "transparent", border: "none", color: "#555", fontSize: 18, cursor: "pointer" }}>✕</button>
+            </div>
+
+            <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+              <input value={queueName} onChange={e => setQueueName(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && joinQueue()}
+                placeholder="Isem dyalk..."
+                style={{ flex: 1, padding: "10px 14px", borderRadius: 10, border: "1px solid #2a2a36",
+                  background: "#0d0d0f", color: "#fff", fontSize: 14, outline: "none" }} />
+              <button onClick={joinQueue} disabled={!queueName.trim()}
+                style={{ padding: "10px 16px", borderRadius: 10, border: "none",
+                  background: queueName.trim() ? "#1D9E75" : "#2a2a36",
+                  color: "#fff", fontSize: 13, cursor: "pointer", fontWeight: 500 }}>
+                Join
+              </button>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 300, overflowY: "auto" }}>
+              {queue.length === 0 ? (
+                <div style={{ textAlign: "center", color: "#333", fontSize: 13, padding: 20 }}>Ma kayn walo...</div>
+              ) : queue.map((q, idx) => (
+                <div key={q.id} style={{ display: "flex", alignItems: "center", gap: 10,
+                  padding: "10px 12px", borderRadius: 10,
+                  background: idx === 0 ? "rgba(29,158,117,0.1)" : "rgba(255,255,255,0.02)",
+                  border: `1px solid ${idx === 0 ? "#1D9E75" : "#2a2a36"}` }}>
+                  <div style={{ width: 28, height: 28, borderRadius: "50%",
+                    background: idx === 0 ? "#1D9E75" : "#2a2a36",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 12, fontWeight: 500, color: "#fff", flexShrink: 0 }}>
+                    {idx + 1}
+                  </div>
+                  <div style={{ flex: 1, fontSize: 13, color: idx === 0 ? "#1D9E75" : "#888",
+                    textTransform: "uppercase", letterSpacing: 1 }}>
+                    {q.name}
+                  </div>
+                  <button onClick={() => leaveQueue(q.id)}
+                    style={{ padding: "4px 10px", borderRadius: 8, border: "1px solid #3a1a1a",
+                      background: "#1a0808", color: "#E24B4A", fontSize: 12, cursor: "pointer" }}>
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", maxWidth: 900, margin: "0 auto 24px" }}>
         <h2 style={{ fontSize: 13, letterSpacing: 3, color: "#4a4a5a", textTransform: "uppercase" }}>Snooker Score</h2>
         <div style={{ display: "flex", gap: 8 }}>
@@ -237,9 +328,9 @@ export default function Home() {
             style={{ background: "transparent", border: "1px solid #2a2a36", borderRadius: 8, color: "#555", fontSize: 12, cursor: "pointer", padding: "6px 12px", letterSpacing: 1 }}>
             TV Display
           </button>
-          <button onClick={() => router.push("/queue")}
+          <button onClick={() => setShowQueue(true)}
             style={{ background: "transparent", border: "1px solid #2a2a36", borderRadius: 8, color: "#555", fontSize: 12, cursor: "pointer", padding: "6px 12px", letterSpacing: 1 }}>
-            Queue
+            Queue {queue.length > 0 && `(${queue.length})`}
           </button>
           <button onClick={() => router.push("/history")}
             style={{ background: "transparent", border: "1px solid #2a2a36", borderRadius: 8, color: "#555", fontSize: 12, cursor: "pointer", padding: "6px 12px", letterSpacing: 1 }}>
@@ -248,6 +339,7 @@ export default function Home() {
         </div>
       </div>
 
+      {/* Scoreboard */}
       <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) 80px minmax(0,1fr)", gap: 12, alignItems: "center", maxWidth: 900, margin: "0 auto 20px" }}>
         <div onClick={() => switchPlayer(0)}
           style={{ padding: "20px 12px", borderRadius: 14, textAlign: "center", cursor: "pointer",
@@ -290,6 +382,7 @@ export default function Home() {
         Active: <b style={{ color: "#aaa" }}>{names[active]}</b>
       </p>
 
+      {/* Balls */}
       <div style={{ display: "flex", justifyContent: "center", gap: 12, maxWidth: 900, margin: "0 auto 14px", flexWrap: "wrap" }}>
         {BALLS.map(b => (
           <button key={b.name} onClick={() => addScore(b.pts)}
@@ -303,6 +396,7 @@ export default function Home() {
         ))}
       </div>
 
+      {/* Fouls */}
       <div style={{ maxWidth: 900, margin: "0 auto 8px" }}>
         <div style={{ fontSize: 9, color: "#442222", textTransform: "uppercase", letterSpacing: 2, textAlign: "center", marginBottom: 6 }}>
           Foul — {names[active === 0 ? 1 : 0]} yakhod
@@ -319,6 +413,7 @@ export default function Home() {
         </div>
       </div>
 
+      {/* Undo */}
       <div style={{ maxWidth: 900, margin: "0 auto 8px" }}>
         <button onClick={undo}
           style={{ width: "100%", padding: 13, borderRadius: 10, border: "1px solid #2a2a36",
@@ -327,6 +422,7 @@ export default function Home() {
         </button>
       </div>
 
+      {/* Fin de Frame */}
       <div style={{ maxWidth: 900, margin: "0 auto" }}>
         <button onClick={finDeFrame}
           style={{ width: "100%", padding: 14, borderRadius: 10,
