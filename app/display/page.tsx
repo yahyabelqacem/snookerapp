@@ -13,6 +13,7 @@ type GameState = {
   best2: number;
   active: number;
   timer_start: number;
+  last_balls: { color: string }[];
 };
 
 type QueueEntry = {
@@ -30,6 +31,7 @@ export default function Display() {
     best1: 0, best2: 0,
     active: 0,
     timer_start: 0,
+    last_balls: [],
   });
 
   const [queue, setQueue] = useState<QueueEntry[]>([]);
@@ -47,10 +49,7 @@ export default function Display() {
 
   useEffect(() => {
     fetchAll();
-
-    // Polling kol 2 secondes
     const poll = setInterval(fetchAll, 2000);
-
     return () => clearInterval(poll);
   }, []);
 
@@ -71,6 +70,7 @@ export default function Display() {
   const diff = Math.abs(game.score1 - game.score2);
   const leader = game.score1 === game.score2 ? null : game.score1 > game.score2 ? 0 : 1;
   const names = [game.player1_name, game.player2_name];
+  const balls = game.last_balls || [];
 
   return (
     <div style={{
@@ -78,13 +78,14 @@ export default function Display() {
       minHeight: "100vh", display: "flex", fontFamily: "sans-serif"
     }}>
 
+      {/* Queue sidebar */}
       <div style={{ width: 220, padding: "30px 16px", borderRight: "1px solid #1a1a1a",
         background: "rgba(0,0,0,0.5)", display: "flex", flexDirection: "column", gap: 8 }}>
         <div style={{ fontSize: 10, letterSpacing: 3, color: "#444", textTransform: "uppercase", marginBottom: 12 }}>
           Waiting list
         </div>
         {queue.length === 0 ? (
-          <div style={{ fontSize: 12, color: "#333", letterSpacing: 1 }}>No one ...</div>
+          <div style={{ fontSize: 12, color: "#333", letterSpacing: 1 }}>Ma kayn walo...</div>
         ) : (
           queue.map((q, idx) => (
             <div key={q.id} style={{ display: "flex", alignItems: "center", gap: 10,
@@ -98,7 +99,7 @@ export default function Display() {
                 {idx + 1}
               </div>
               <div style={{ fontSize: 13, color: idx === 0 ? "#1D9E75" : "#666",
-                textTransform: "uppercase", letterSpacing: 1, fontWeight: idx === 0 ? 500 : 400 }}>
+                textTransform: "uppercase", letterSpacing: 1 }}>
                 {q.name}
               </div>
             </div>
@@ -106,20 +107,35 @@ export default function Display() {
         )}
       </div>
 
+      {/* Main */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", padding: "40px" }}>
 
-        <div style={{ textAlign: "center", marginBottom: 30 }}>
+        <div style={{ textAlign: "center", marginBottom: 20 }}>
           <div style={{ fontSize: 11, letterSpacing: 4, color: "#aaa", textTransform: "uppercase", marginBottom: 4 }}>
             Welcome to
           </div>
           <div style={{ fontSize: 32, letterSpacing: 8, color: "#1D9E75", textTransform: "uppercase",
-            fontWeight: 500, fontStyle: "italic", marginBottom: 16 }}>
+            fontWeight: 500, fontStyle: "italic", marginBottom: 12 }}>
             JET7POOL
           </div>
           <div style={{ fontSize: 42, fontWeight: 500, color: "#fff", letterSpacing: 4, fontVariantNumeric: "tabular-nums" }}>
             {elapsed}
           </div>
         </div>
+
+        {/* Balls ticker */}
+        {balls.length > 0 && (
+          <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
+            {balls.map((b, i) => (
+              <div key={i} style={{
+                width: 28, height: 28, borderRadius: "50%",
+                background: b.color,
+                border: "2px solid rgba(255,255,255,0.15)",
+                flexShrink: 0
+              }} />
+            ))}
+          </div>
+        )}
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 120px 1fr", gap: 20, alignItems: "center", marginBottom: 30 }}>
 
