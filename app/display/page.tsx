@@ -163,24 +163,29 @@ export default function Display() {
         {/* Header */}
         <div style={{ textAlign: "center", marginBottom: 28 }}>
           <div style={{
-            fontSize: 13, color: "rgba(255,255,255,0.3)",
-            fontStyle: "italic", letterSpacing: 6, marginBottom: 4,
-            fontFamily: "Georgia, serif"
+            fontSize: 11,
+            color: "rgba(255,255,255,0.25)",
+            letterSpacing: 10,
+            textTransform: "uppercase",
+            fontFamily: "Georgia, serif",
+            marginBottom: 6
           }}>
-            𝓦𝓮𝓵𝓬𝓸𝓶𝓮 𝓽𝓸
+            — Welcome to —
           </div>
           <div style={{
-            fontSize: "clamp(40px, 5vw, 80px)",
-            fontFamily: "Georgia, serif",
+            fontSize: "clamp(44px, 6vw, 90px)",
+            fontFamily: "'Times New Roman', serif",
+            fontWeight: 900,
             fontStyle: "italic",
-            fontWeight: 700,
-            letterSpacing: 8,
-            background: "linear-gradient(135deg, #888 0%, #fff 40%, #aaa 60%, #1E5FA8 100%)",
+            letterSpacing: 10,
+            lineHeight: 1,
+            background: "linear-gradient(180deg, #ffffff 0%, #d4af37 40%, #ffffff 60%, #b8860b 100%)",
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
-            lineHeight: 1,
+            filter: "drop-shadow(0 0 20px rgba(212,175,55,0.4))",
+            textTransform: "uppercase",
           }}>
-            𝒥𝐸𝒯7𝒫𝒪𝒪𝐿
+            JET7POOL
           </div>
         </div>
 
@@ -195,7 +200,6 @@ export default function Display() {
               : "rgba(15,15,20,0.7)",
             border: `2px solid ${game.active === 0 ? "#378ADD" : "rgba(255,255,255,0.05)"}`,
             boxShadow: game.active === 0 ? "0 0 30px rgba(55,138,221,0.2)" : "none",
-            transition: "all 0.3s"
           }}>
             <div style={{
               fontSize: 14, letterSpacing: 4, color: game.active === 0 ? "#85B7EB" : "#444",
@@ -244,7 +248,6 @@ export default function Display() {
               : "rgba(15,15,20,0.7)",
             border: `2px solid ${game.active === 1 ? "#D85A30" : "rgba(255,255,255,0.05)"}`,
             boxShadow: game.active === 1 ? "0 0 30px rgba(216,90,48,0.2)" : "none",
-            transition: "all 0.3s"
           }}>
             <div style={{
               fontSize: 14, letterSpacing: 4, color: game.active === 1 ? "#F0997B" : "#444",
