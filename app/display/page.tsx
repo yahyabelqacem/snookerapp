@@ -76,11 +76,11 @@ export default function Display() {
 
       {/* Header */}
       <div style={{ textAlign: "center", marginBottom: 30 }}>
-        <div style={{ fontSize: 11, letterSpacing: 4, color: "#aaa", textTransform: "uppercase", marginBottom: 4 }}>
+        <div style={{ fontSize: 11, letterSpacing: 4, color: "#e6e4cb", textTransform: "uppercase", marginBottom: 4 }}>
           Welcome to
         </div>
-        <div style={{ fontSize: 32, letterSpacing: 8, color: "#1D9E75", textTransform: "uppercase", fontWeight: 500, marginBottom: 16, fontStyle: "italic" }}>
-  JET7POOL
+        <div style={{ fontSize: 32, letterSpacing: 8, color: "#85a70a", textTransform: "uppercase", fontWeight: 500, marginBottom: 16, fontStyle: "italic" }}>
+  Jet7Pool
         </div>
         <div style={{ fontSize: 42, fontWeight: 500, color: "#fff", letterSpacing: 4, fontVariantNumeric: "tabular-nums" }}>
           {elapsed}
