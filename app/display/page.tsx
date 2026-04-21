@@ -128,20 +128,19 @@ export default function Display() {
       {/* Main */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", padding: "40px" }}>
 
+        {/* Header */}
         <div style={{ textAlign: "center", marginBottom: 24 }}>
           <div style={{ fontSize: 11, letterSpacing: 4, color: "#aaa", textTransform: "uppercase", marginBottom: 4 }}>
             Welcome to
           </div>
           <div style={{ fontSize: 32, letterSpacing: 8, color: "#1D9E75", textTransform: "uppercase",
-            fontWeight: 500, fontStyle: "italic", marginBottom: 12 }}>
+            fontWeight: 500, fontStyle: "italic" }}>
             JET7POOL
-          </div>
-          <div style={{ fontSize: 42, fontWeight: 500, color: "#fff", letterSpacing: 4 }}>
-            {elapsed}
           </div>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 120px 1fr", gap: 20, alignItems: "start", marginBottom: 30 }}>
+        {/* Scoreboard */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 120px 1fr", gap: 20, alignItems: "start", marginBottom: 24 }}>
 
           {/* Player 1 */}
           <div style={{ padding: "30px 20px", borderRadius: 20, textAlign: "center",
@@ -194,9 +193,21 @@ export default function Display() {
 
         </div>
 
-        <div style={{ textAlign: "center", fontSize: 14, color: "#555", letterSpacing: 2, textTransform: "uppercase" }}>
-          Active: <b style={{ color: "#aaa" }}>{names[game.active]}</b>
+        {/* Active + Timer */}
+        <div style={{ textAlign: "center" }}>
+          <div style={{ fontSize: 13, color: "#555", letterSpacing: 2, textTransform: "uppercase", marginBottom: 10 }}>
+            Active: <b style={{ color: "#aaa" }}>{names[game.active]}</b>
+          </div>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8,
+            background: "rgba(0,0,0,0.4)", borderRadius: 20, padding: "8px 20px",
+            border: "1px solid rgba(245,196,0,0.3)" }}>
+            <span style={{ fontSize: 16 }}>⏱</span>
+            <span style={{ fontSize: 22, fontWeight: 500, color: "#F5C400", letterSpacing: 3, fontVariantNumeric: "tabular-nums" }}>
+              {elapsed}
+            </span>
+          </div>
         </div>
+
       </div>
     </div>
   );
