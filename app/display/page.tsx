@@ -145,22 +145,24 @@ export default function Display() {
       {/* Main */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", padding: "40px" }}>
 
-        {/* Logo */}
-        <div style={{ textAlign: "center", marginBottom: 20, width: "100%" }}>
-          <div style={{ fontSize: 11, letterSpacing: 4, color: "#aaa", textTransform: "uppercase", marginBottom: 8 }}>
-            Welcome to
+        {/* Header */}
+        <div style={{ textAlign: "center", marginBottom: 24, width: "100%" }}>
+          <div style={{
+            fontSize: 18, color: "#aaa", marginBottom: 6,
+            fontFamily: "Georgia, serif", fontStyle: "italic", letterSpacing: 2
+          }}>
+            𝓦𝓮𝓵𝓬𝓸𝓶𝓮 𝓽𝓸
           </div>
-          <img
-            src="/logo.png"
-            alt="JET7POOL"
-            style={{
-              height: "clamp(60px, 8vw, 120px)",
-              width: "auto",
-              objectFit: "contain",
-              display: "block",
-              margin: "0 auto",
-            }}
-          />
+          <div style={{
+            fontSize: "clamp(36px, 5vw, 72px)", fontWeight: 700,
+            fontFamily: "Georgia, serif", fontStyle: "italic",
+            background: "linear-gradient(135deg, #a0a0a0, #ffffff, #c0c0c0, #1E5FA8)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            letterSpacing: 6,
+          }}>
+            𝒥𝐸𝒯7𝒫𝒪𝒪𝐿
+          </div>
         </div>
 
         {/* Scoreboard */}
