@@ -23,6 +23,16 @@ type QueueEntry = {
   position: number;
 };
 
+const BALL_COLORS: Record<string, string> = {
+  "#993C1D": "#CC0000",
+  "#F5C400": "#FFD700",
+  "#1D9E75": "#007A33",
+  "#5c3018": "#6B3A2A",
+  "#185FA5": "#1E5FA8",
+  "#993556": "#E8729A",
+  "#2a2a36": "#111111",
+};
+
 export default function Display() {
   const [game, setGame] = useState<GameState>({
     player1_name: "Player 1",
@@ -79,16 +89,22 @@ export default function Display() {
   const balls1 = Array.isArray(game.balls1) ? game.balls1 : [];
   const balls2 = Array.isArray(game.balls2) ? game.balls2 : [];
 
+  const getRealColor = (color: string) => BALL_COLORS[color] || color;
+
   const BallsRow = ({ balls }: { balls: { color: string }[] }) => (
     <div style={{ display: "flex", justifyContent: "center", gap: 6, marginBottom: 12, flexWrap: "wrap" }}>
-      {balls.map((b, i) => (
-        <div key={i} style={{
-          width: 22, height: 22, borderRadius: "50%",
-          background: b.color,
-          border: "2px solid rgba(255,255,255,0.2)",
-          flexShrink: 0
-        }} />
-      ))}
+      {balls.map((b, i) => {
+        const realColor = getRealColor(b.color);
+        return (
+          <div key={i} style={{
+            width: 26, height: 26, borderRadius: "50%",
+            background: `radial-gradient(circle at 35% 35%, ${realColor}ee, ${realColor}88)`,
+            border: "2px solid rgba(255,255,255,0.25)",
+            boxShadow: `0 2px 6px rgba(0,0,0,0.5), inset 0 1px 2px rgba(255,255,255,0.2)`,
+            flexShrink: 0
+          }} />
+        );
+      })}
     </div>
   );
 
