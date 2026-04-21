@@ -169,15 +169,11 @@ export default function Home() {
     const newBreaks = [...breaksRef.current];
     newBreaks[p] = 0;
     breaksRef.current = newBreaks;
-
-    // Reset balls mnin ytbeddel player
-    lastBallsRef.current = [];
-    setLastBalls([]);
-
     setBests([...newBests]);
     setBreaks([...newBreaks]);
     setActiveState(to);
-    syncToSupabase(scores, newBreaks, newBests, to, name1, name2, undefined, []);
+    // Khli last_balls — mabadlawch
+    syncToSupabase(scores, newBreaks, newBests, to, name1, name2);
   };
 
   const undo = () => {
@@ -200,12 +196,9 @@ export default function Home() {
       const newBreaks = [...breaksRef.current];
       newBreaks[last.player] = last.breakBefore;
       breaksRef.current = newBreaks;
-
-      // Remove last ball
       const newBalls = lastBallsRef.current.slice(0, -1);
       lastBallsRef.current = newBalls;
       setLastBalls([...newBalls]);
-
       setScores(newScores);
       setBreaks([...newBreaks]);
       syncToSupabase(newScores, newBreaks, bestsRef.current, active, name1, name2, undefined, newBalls);
