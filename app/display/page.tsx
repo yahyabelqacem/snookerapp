@@ -1,7 +1,4 @@
 "use client";
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "../lib/supabase";
 
@@ -51,22 +48,10 @@ export default function Display() {
   useEffect(() => {
     fetchAll();
 
-    const channel = supabase
-      .channel("display_realtime_v2")
-      .on("postgres_changes", {
-        event: "*", schema: "public", table: "game_state"
-      }, (payload) => {
-        setGame(payload.new as GameState);
-      })
-      .on("postgres_changes", {
-        event: "*", schema: "public", table: "queue"
-      }, () => {
-        supabase.from("queue").select("*").order("position")
-          .then(({ data }) => { if (data) setQueue(data); });
-      })
-      .subscribe();
+    // Polling kol 2 secondes
+    const poll = setInterval(fetchAll, 2000);
 
-    return () => { supabase.removeChannel(channel); };
+    return () => clearInterval(poll);
   }, []);
 
   useEffect(() => {
@@ -93,7 +78,6 @@ export default function Display() {
       minHeight: "100vh", display: "flex", fontFamily: "sans-serif"
     }}>
 
-      {/* Queue sidebar */}
       <div style={{ width: 220, padding: "30px 16px", borderRight: "1px solid #1a1a1a",
         background: "rgba(0,0,0,0.5)", display: "flex", flexDirection: "column", gap: 8 }}>
         <div style={{ fontSize: 10, letterSpacing: 3, color: "#444", textTransform: "uppercase", marginBottom: 12 }}>
@@ -122,7 +106,6 @@ export default function Display() {
         )}
       </div>
 
-      {/* Main display */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", padding: "40px" }}>
 
         <div style={{ textAlign: "center", marginBottom: 30 }}>
