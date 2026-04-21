@@ -74,15 +74,20 @@ export default function Display() {
       justifyContent: "center", padding: "40px", fontFamily: "sans-serif"
     }}>
 
+      {/* Header */}
       <div style={{ textAlign: "center", marginBottom: 30 }}>
-        <div style={{ fontSize: 11, letterSpacing: 4, color: "#aaa", textTransform: "uppercase", marginBottom: 8 }}>
-          Snooker Score
+        <div style={{ fontSize: 11, letterSpacing: 4, color: "#aaa", textTransform: "uppercase", marginBottom: 4 }}>
+          Welcome to
+        </div>
+        <div style={{ fontSize: 32, letterSpacing: 8, color: "#1D9E75", textTransform: "uppercase", fontWeight: 500, marginBottom: 16 }}>
+          JET7POOL
         </div>
         <div style={{ fontSize: 42, fontWeight: 500, color: "#fff", letterSpacing: 4, fontVariantNumeric: "tabular-nums" }}>
           {elapsed}
         </div>
       </div>
 
+      {/* Scoreboard */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 120px 1fr", gap: 20, alignItems: "center", marginBottom: 30 }}>
 
         <div style={{ padding: "40px 20px", borderRadius: 20, textAlign: "center",
@@ -120,7 +125,7 @@ export default function Display() {
             {game.score2}
           </div>
           <div style={{ fontSize: 16, color: "#666", marginBottom: 8 }}>
-            Break: <b style={{ color: "#888", fontSize: 20 }}>{game.break2}</b>
+            Break: <b style={{ color: "#666", fontSize: 20 }}>{game.break2}</b>
           </div>
           <div style={{ fontSize: 13, color: "#555" }}>
             Highest break: <b style={{ color: "#666" }}>{game.best2}</b>
