@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "../lib/supabase";
 
 type GameState = {
@@ -34,33 +34,46 @@ export default function Display() {
 
   const [queue, setQueue] = useState<QueueEntry[]>([]);
   const [elapsed, setElapsed] = useState("00:00");
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const gameRef = useRef(game);
+  gameRef.current = game;
+
+  const fetchAll = async () => {
+    const { data: g } = await supabase.from("game_state").select("*").eq("id", 1).single();
+    if (g) setGame(g);
+    const { data: q } = await supabase.from("queue").select("*").order("position");
+    if (q) setQueue(q);
+  };
 
   useEffect(() => {
-    supabase.from("game_state").select("*").eq("id", 1).single()
-      .then(({ data }) => { if (data) setGame(data); });
-
-    supabase.from("queue").select("*").order("position")
-      .then(({ data }) => { if (data) setQueue(data); });
+    fetchAll();
 
     const channel = supabase
-      .channel("realtime_all")
+      .channel("display_realtime")
       .on("postgres_changes", {
-        event: "UPDATE", schema: "public", table: "game_state"
-      }, (payload) => { setGame(payload.new as GameState); })
+        event: "*", schema: "public", table: "game_state"
+      }, (payload) => {
+        setGame(payload.new as GameState);
+      })
       .on("postgres_changes", {
         event: "*", schema: "public", table: "queue"
       }, () => {
         supabase.from("queue").select("*").order("position")
           .then(({ data }) => { if (data) setQueue(data); });
       })
-      .subscribe();
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") {
+          console.log("Realtime connected!");
+        }
+      });
 
     return () => { supabase.removeChannel(channel); };
   }, []);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      const ts = game.timer_start;
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      const ts = gameRef.current.timer_start;
       if (!ts || ts <= 0) { setElapsed("00:00"); return; }
       const diff = Math.floor((Date.now() - ts) / 1000);
       if (diff < 0) { setElapsed("00:00"); return; }
@@ -68,7 +81,7 @@ export default function Display() {
       const secs = (diff % 60).toString().padStart(2, "0");
       setElapsed(`${mins}:${secs}`);
     }, 1000);
-    return () => clearInterval(interval);
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [game.timer_start]);
 
   const diff = Math.abs(game.score1 - game.score2);
