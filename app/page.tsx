@@ -197,7 +197,6 @@ export default function Home() {
   return (
     <div style={{ background: "#0d0d0f", minHeight: "100vh", padding: "28px 24px", fontFamily: "sans-serif" }}>
 
-      {/* Confirmation Popup */}
       {showConfirm && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
           background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center",
@@ -245,7 +244,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Scoreboard */}
       <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) 80px minmax(0,1fr)", gap: 12, alignItems: "center", maxWidth: 900, margin: "0 auto 20px" }}>
         <div onClick={() => switchPlayer(0)}
           style={{ padding: "20px 12px", borderRadius: 14, textAlign: "center", cursor: "pointer",
@@ -288,7 +286,6 @@ export default function Home() {
         Active: <b style={{ color: "#aaa" }}>{names[active]}</b>
       </p>
 
-      {/* Balls — cercles */}
       <div style={{ display: "flex", justifyContent: "center", gap: 12, maxWidth: 900, margin: "0 auto 14px", flexWrap: "wrap" }}>
         {BALLS.map(b => (
           <button key={b.name} onClick={() => addScore(b.pts)}
@@ -302,7 +299,6 @@ export default function Home() {
         ))}
       </div>
 
-      {/* Fin de Frame */}
       <div style={{ maxWidth: 900, margin: "0 auto 10px" }}>
         <button onClick={finDeFrame}
           style={{ width: "100%", padding: 14, borderRadius: 10,
@@ -314,7 +310,6 @@ export default function Home() {
         </button>
       </div>
 
-      {/* Fouls */}
       <div style={{ maxWidth: 900, margin: "0 auto 8px" }}>
         <div style={{ fontSize: 9, color: "#442222", textTransform: "uppercase", letterSpacing: 2, textAlign: "center", marginBottom: 6 }}>
           Foul — {names[active === 0 ? 1 : 0]} yakhod
@@ -331,19 +326,14 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Undo + Reset */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, maxWidth: 900, margin: "0 auto" }}>
+      <div style={{ maxWidth: 900, margin: "0 auto" }}>
         <button onClick={undo}
-          style={{ padding: 13, borderRadius: 10, border: "1px solid #2a2a36", background: "#17171f",
-            color: "#888", fontSize: 13, cursor: "pointer", letterSpacing: 0.5 }}>
+          style={{ width: "100%", padding: 13, borderRadius: 10, border: "1px solid #2a2a36",
+            background: "#17171f", color: "#888", fontSize: 13, cursor: "pointer", letterSpacing: 0.5 }}>
           Undo
         </button>
-        <button onClick={resetAll}
-          style={{ padding: 13, borderRadius: 10, border: "1px solid #2a2a36", background: "#17171f",
-            color: "#888", fontSize: 13, cursor: "pointer", letterSpacing: 0.5 }}>
-          Reset
-        </button>
       </div>
+
     </div>
   );
 }
