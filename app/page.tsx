@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "./lib/supabase";
 import { FrameResult } from "./types";
@@ -186,6 +186,7 @@ export default function Home() {
         </div>
       </div>
 
+      {/* Scoreboard */}
       <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) 80px minmax(0,1fr)", gap: 12, alignItems: "center", maxWidth: 900, margin: "0 auto 20px" }}>
         <div onClick={() => switchPlayer(0)}
           style={{ padding: "20px 12px", borderRadius: 14, textAlign: "center", cursor: "pointer",
@@ -193,7 +194,9 @@ export default function Home() {
             border: `2px solid ${active === 0 ? "#378ADD" : "#2a2a36"}` }}>
           <input value={name1} onChange={e => { setName1(e.target.value); syncToSupabase(scores, breaks, bests, active, e.target.value, name2); }}
             onClick={e => e.stopPropagation()}
-            style={{ background: "transparent", border: "none", outline: "none", textAlign: "center", fontSize: 13, fontWeight: 500, width: "100%", letterSpacing: 2, textTransform: "uppercase", color: active === 0 ? "#85B7EB" : "#aaa" }} />
+            style={{ background: "transparent", border: "none", outline: "none", textAlign: "center",
+              fontSize: 13, fontWeight: 500, width: "100%", letterSpacing: 2,
+              textTransform: "uppercase", color: active === 0 ? "#85B7EB" : "#aaa" }} />
           <div style={{ fontSize: 64, fontWeight: 500, lineHeight: 1, color: "#fff", margin: "8px 0" }}>{scores[0]}</div>
           <div style={{ fontSize: 12, color: "#555", marginTop: 8 }}>Break: <b style={{ color: "#888" }}>{breaks[0]}</b></div>
           <div style={{ fontSize: 11, color: "#444", marginTop: 4 }}>Highest break: <b style={{ color: "#666" }}>{bests[0]}</b></div>
@@ -213,7 +216,9 @@ export default function Home() {
             border: `2px solid ${active === 1 ? "#D85A30" : "#2a2a36"}` }}>
           <input value={name2} onChange={e => { setName2(e.target.value); syncToSupabase(scores, breaks, bests, active, name1, e.target.value); }}
             onClick={e => e.stopPropagation()}
-            style={{ background: "transparent", border: "none", outline: "none", textAlign: "center", fontSize: 13, fontWeight: 500, width: "100%", letterSpacing: 2, textTransform: "uppercase", color: active === 1 ? "#F0997B" : "#aaa" }} />
+            style={{ background: "transparent", border: "none", outline: "none", textAlign: "center",
+              fontSize: 13, fontWeight: 500, width: "100%", letterSpacing: 2,
+              textTransform: "uppercase", color: active === 1 ? "#F0997B" : "#aaa" }} />
           <div style={{ fontSize: 64, fontWeight: 500, lineHeight: 1, color: "#fff", margin: "8px 0" }}>{scores[1]}</div>
           <div style={{ fontSize: 12, color: "#555", marginTop: 8 }}>Break: <b style={{ color: "#888" }}>{breaks[1]}</b></div>
           <div style={{ fontSize: 11, color: "#444", marginTop: 4 }}>Highest break: <b style={{ color: "#666" }}>{bests[1]}</b></div>
@@ -224,17 +229,21 @@ export default function Home() {
         Active: <b style={{ color: "#aaa" }}>{names[active]}</b>
       </p>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, maxWidth: 900, margin: "0 auto 10px" }}>
+      {/* Balls — cercles */}
+      <div style={{ display: "flex", justifyContent: "center", gap: 12, maxWidth: 900, margin: "0 auto 14px", flexWrap: "wrap" }}>
         {BALLS.map(b => (
           <button key={b.name} onClick={() => addScore(b.pts)}
-            style={{ padding: "14px 4px", borderRadius: 10, border: "none",
+            style={{ width: 72, height: 72, borderRadius: "50%", border: "none",
               background: b.color, color: b.name === "YELLOW" ? "#000" : "#fff",
-              fontSize: 13, fontWeight: 500, cursor: "pointer", letterSpacing: 0.3 }}>
-            {b.name}<br /><span style={{ fontSize: 11, opacity: 0.7 }}>+{b.pts}</span>
+              fontSize: 11, fontWeight: 500, cursor: "pointer",
+              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2 }}>
+            <span>{b.name}</span>
+            <span style={{ fontSize: 10, opacity: 0.8 }}>+{b.pts}</span>
           </button>
         ))}
       </div>
 
+      {/* Fin de Frame */}
       <div style={{ maxWidth: 900, margin: "0 auto 10px" }}>
         <button onClick={finDeFrame}
           style={{ width: "100%", padding: 14, borderRadius: 10,
@@ -246,6 +255,7 @@ export default function Home() {
         </button>
       </div>
 
+      {/* Fouls */}
       <div style={{ maxWidth: 900, margin: "0 auto 8px" }}>
         <div style={{ fontSize: 9, color: "#442222", textTransform: "uppercase", letterSpacing: 2, textAlign: "center", marginBottom: 6 }}>
           Foul — {names[active === 0 ? 1 : 0]} yakhod
@@ -262,13 +272,16 @@ export default function Home() {
         </div>
       </div>
 
+      {/* Undo + Reset */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, maxWidth: 900, margin: "0 auto" }}>
         <button onClick={undo}
-          style={{ padding: 13, borderRadius: 10, border: "1px solid #2a2a36", background: "#17171f", color: "#888", fontSize: 13, cursor: "pointer", letterSpacing: 0.5 }}>
+          style={{ padding: 13, borderRadius: 10, border: "1px solid #2a2a36", background: "#17171f",
+            color: "#888", fontSize: 13, cursor: "pointer", letterSpacing: 0.5 }}>
           Undo
         </button>
         <button onClick={resetAll}
-          style={{ padding: 13, borderRadius: 10, border: "1px solid #2a2a36", background: "#17171f", color: "#888", fontSize: 13, cursor: "pointer", letterSpacing: 0.5 }}>
+          style={{ padding: 13, borderRadius: 10, border: "1px solid #2a2a36", background: "#17171f",
+            color: "#888", fontSize: 13, cursor: "pointer", letterSpacing: 0.5 }}>
           Reset
         </button>
       </div>
