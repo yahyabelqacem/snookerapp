@@ -207,7 +207,6 @@ export default function Home() {
     const existing: FrameResult[] = saved ? JSON.parse(saved) : [];
     localStorage.setItem("snooker_frames", JSON.stringify([...existing, frame]));
 
-    // L winner yb9a — l loser ytbeddel b awal wahd f queue
     let newLoserName = names[loserIdx];
     if (queue.length > 0) {
       const next = queue[0];
@@ -217,11 +216,12 @@ export default function Home() {
 
     const newName1 = winnerIdx === 0 ? names[0] : newLoserName;
     const newName2 = winnerIdx === 1 ? names[1] : newLoserName;
-
     const newStart = Date.now();
-    setTimerStart(newStart);
+
     breaksRef.current = [0, 0];
     bestsRef.current = [0, 0];
+
+    setShowConfirm(false);
     setScores([0, 0]);
     setBreaks([0, 0]);
     setBests([0, 0]);
@@ -229,9 +229,18 @@ export default function Home() {
     setHistory([]);
     setName1(newName1);
     setName2(newName2);
-    setShowConfirm(false);
+    setTimerStart(newStart);
 
-    await syncToSupabase([0, 0], [0, 0], [0, 0], 0, newName1, newName2, newStart);
+    await supabase.from("game_state").update({
+      score1: 0, score2: 0,
+      break1: 0, break2: 0,
+      best1: 0, best2: 0,
+      active: 0,
+      player1_name: newName1,
+      player2_name: newName2,
+      timer_start: newStart,
+      updated_at: new Date().toISOString()
+    }).eq("id", 1);
   };
 
   const diff = Math.abs(scores[0] - scores[1]);
@@ -240,7 +249,6 @@ export default function Home() {
   return (
     <div style={{ background: "#0d0d0f", minHeight: "100vh", padding: "28px 24px", fontFamily: "sans-serif" }}>
 
-      {/* Confirm popup */}
       {showConfirm && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
           background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center",
@@ -279,7 +287,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* Queue popup */}
       {showQueue && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
           background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center",
@@ -291,7 +298,6 @@ export default function Home() {
               <button onClick={() => setShowQueue(false)}
                 style={{ background: "transparent", border: "none", color: "#555", fontSize: 18, cursor: "pointer" }}>✕</button>
             </div>
-
             <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
               <input value={queueName} onChange={e => setQueueName(e.target.value)}
                 onKeyDown={e => e.key === "Enter" && joinQueue()}
@@ -305,7 +311,6 @@ export default function Home() {
                 Join
               </button>
             </div>
-
             <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 300, overflowY: "auto" }}>
               {queue.length === 0 ? (
                 <div style={{ textAlign: "center", color: "#333", fontSize: 13, padding: 20 }}>Ma kayn walo...</div>
@@ -336,7 +341,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", maxWidth: 900, margin: "0 auto 24px" }}>
         <h2 style={{ fontSize: 13, letterSpacing: 3, color: "#4a4a5a", textTransform: "uppercase" }}>Snooker Score</h2>
         <div style={{ display: "flex", gap: 8 }}>
@@ -355,7 +359,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Scoreboard */}
       <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) 80px minmax(0,1fr)", gap: 12, alignItems: "center", maxWidth: 900, margin: "0 auto 20px" }}>
         <div onClick={() => switchPlayer(0)}
           style={{ padding: "20px 12px", borderRadius: 14, textAlign: "center", cursor: "pointer",
@@ -398,7 +401,6 @@ export default function Home() {
         Active: <b style={{ color: "#aaa" }}>{names[active]}</b>
       </p>
 
-      {/* Balls */}
       <div style={{ display: "flex", justifyContent: "center", gap: 12, maxWidth: 900, margin: "0 auto 14px", flexWrap: "wrap" }}>
         {BALLS.map(b => (
           <button key={b.name} onClick={() => addScore(b.pts)}
@@ -412,7 +414,6 @@ export default function Home() {
         ))}
       </div>
 
-      {/* Fouls */}
       <div style={{ maxWidth: 900, margin: "0 auto 8px" }}>
         <div style={{ fontSize: 9, color: "#442222", textTransform: "uppercase", letterSpacing: 2, textAlign: "center", marginBottom: 6 }}>
           Foul — {names[active === 0 ? 1 : 0]} yakhod
@@ -429,7 +430,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Undo */}
       <div style={{ maxWidth: 900, margin: "0 auto 8px" }}>
         <button onClick={undo}
           style={{ width: "100%", padding: 13, borderRadius: 10, border: "1px solid #2a2a36",
@@ -438,7 +438,6 @@ export default function Home() {
         </button>
       </div>
 
-      {/* Fin de Frame */}
       <div style={{ maxWidth: 900, margin: "0 auto" }}>
         <button onClick={finDeFrame}
           style={{ width: "100%", padding: 14, borderRadius: 10,
