@@ -30,7 +30,7 @@ export default function Home() {
   const [name1, setName1] = useState("Player 1");
   const [name2, setName2] = useState("Player 2");
   const [history, setHistory] = useState<HistoryEntry[]>([]);
-  const [timerStart] = useState(Date.now());
+  const [timerStart, setTimerStart] = useState(Date.now());
   const [showConfirm, setShowConfirm] = useState(false);
 
   const breaksRef = useRef([0, 0]);
@@ -138,6 +138,7 @@ export default function Home() {
 
   const resetAll = () => {
     const newStart = Date.now();
+    setTimerStart(newStart);
     breaksRef.current = [0, 0];
     bestsRef.current = [0, 0];
     setScores([0, 0]);
