@@ -31,6 +31,7 @@ export default function Home() {
   const [name2, setName2] = useState("Player 2");
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [timerStart] = useState(Date.now());
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const breaksRef = useRef([0, 0]);
   const bestsRef = useRef([0, 0]);
@@ -149,6 +150,10 @@ export default function Home() {
 
   const finDeFrame = () => {
     if (scores[0] === scores[1]) return;
+    setShowConfirm(true);
+  };
+
+  const confirmFinDeFrame = () => {
     const winnerIdx = scores[0] > scores[1] ? 0 : 1;
     const loserIdx = winnerIdx === 0 ? 1 : 0;
     const frame: FrameResult = {
@@ -163,6 +168,7 @@ export default function Home() {
     const saved = localStorage.getItem("snooker_frames");
     const existing: FrameResult[] = saved ? JSON.parse(saved) : [];
     localStorage.setItem("snooker_frames", JSON.stringify([...existing, frame]));
+    setShowConfirm(false);
     resetAll();
     router.push("/history");
   };
@@ -172,6 +178,41 @@ export default function Home() {
 
   return (
     <div style={{ background: "#0d0d0f", minHeight: "100vh", padding: "28px 24px", fontFamily: "sans-serif" }}>
+
+      {/* Confirmation Popup */}
+      {showConfirm && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+          background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center",
+          justifyContent: "center", zIndex: 999 }}>
+          <div style={{ background: "#17171f", borderRadius: 16, padding: 32, maxWidth: 340, width: "90%",
+            border: "1px solid #2a2a36", textAlign: "center" }}>
+            <div style={{ fontSize: 16, color: "#fff", marginBottom: 8, letterSpacing: 1, textTransform: "uppercase" }}>
+              Fin de Frame?
+            </div>
+            <div style={{ fontSize: 13, color: "#555", marginBottom: 24 }}>
+              <span style={{ color: "#1D9E75", fontWeight: 500 }}>
+                {names[scores[0] > scores[1] ? 0 : 1]}
+              </span>
+              {" "}wins{" "}
+              {Math.max(scores[0], scores[1])} — {Math.min(scores[0], scores[1])}
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              <button onClick={() => setShowConfirm(false)}
+                style={{ padding: 12, borderRadius: 10, border: "1px solid #2a2a36",
+                  background: "#0d0d0f", color: "#888", fontSize: 13, cursor: "pointer" }}>
+                Cancel
+              </button>
+              <button onClick={confirmFinDeFrame}
+                style={{ padding: 12, borderRadius: 10, border: "1px solid #1a3a1a",
+                  background: "#0a1a0a", color: "#1D9E75", fontSize: 13,
+                  cursor: "pointer", fontWeight: 500 }}>
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", maxWidth: 900, margin: "0 auto 24px" }}>
         <h2 style={{ fontSize: 13, letterSpacing: 3, color: "#4a4a5a", textTransform: "uppercase" }}>Snooker Score</h2>
         <div style={{ display: "flex", gap: 8 }}>
