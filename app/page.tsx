@@ -28,6 +28,10 @@ type QueueEntry = {
   position: number;
 };
 
+type BallEntry = {
+  color: string;
+};
+
 export default function Home() {
   const [scores, setScores] = useState([0, 0]);
   const [breaks, setBreaks] = useState([0, 0]);
@@ -41,9 +45,11 @@ export default function Home() {
   const [queue, setQueue] = useState<QueueEntry[]>([]);
   const [queueName, setQueueName] = useState("");
   const [showQueue, setShowQueue] = useState(false);
+  const [lastBalls, setLastBalls] = useState<BallEntry[]>([]);
 
   const breaksRef = useRef([0, 0]);
   const bestsRef = useRef([0, 0]);
+  const lastBallsRef = useRef<BallEntry[]>([]);
   const router = useRouter();
   const names = [name1, name2];
 
@@ -60,6 +66,10 @@ export default function Home() {
           setTimerStart(data.timer_start || Date.now());
           breaksRef.current = [data.break1, data.break2];
           bestsRef.current = [data.best1, data.best2];
+          if (data.last_balls) {
+            setLastBalls(data.last_balls);
+            lastBallsRef.current = data.last_balls;
+          }
         }
       });
 
@@ -88,7 +98,7 @@ export default function Home() {
   };
 
   const syncToSupabase = async (
-    s: number[], b: number[], bs: number[], a: number, n1: string, n2: string, ts?: number
+    s: number[], b: number[], bs: number[], a: number, n1: string, n2: string, ts?: number, balls?: BallEntry[]
   ) => {
     await supabase.from("game_state").update({
       score1: s[0], score2: s[1],
@@ -97,12 +107,18 @@ export default function Home() {
       active: a,
       player1_name: n1, player2_name: n2,
       timer_start: ts !== undefined ? ts : timerStart,
+      last_balls: balls !== undefined ? balls : lastBallsRef.current,
       updated_at: new Date().toISOString()
     }).eq("id", 1);
   };
 
   const addScore = (pts: number) => {
     const p = active;
+    const ball = BALLS.find(b => b.pts === pts);
+    const newBalls = [...lastBallsRef.current, { color: ball?.color || "#fff" }];
+    lastBallsRef.current = newBalls;
+    setLastBalls([...newBalls]);
+
     const newBreaks = [...breaksRef.current];
     newBreaks[p] += pts;
     breaksRef.current = newBreaks;
@@ -115,7 +131,7 @@ export default function Home() {
     const newScores = scores.map((s, i) => i === p ? s + pts : s);
     setScores(newScores);
     setBreaks([...newBreaks]);
-    syncToSupabase(newScores, newBreaks, bestsRef.current, active, name1, name2);
+    syncToSupabase(newScores, newBreaks, bestsRef.current, active, name1, name2, undefined, newBalls);
   };
 
   const addFoul = (pts: number) => {
@@ -153,10 +169,15 @@ export default function Home() {
     const newBreaks = [...breaksRef.current];
     newBreaks[p] = 0;
     breaksRef.current = newBreaks;
+
+    // Reset balls mnin ytbeddel player
+    lastBallsRef.current = [];
+    setLastBalls([]);
+
     setBests([...newBests]);
     setBreaks([...newBreaks]);
     setActiveState(to);
-    syncToSupabase(scores, newBreaks, newBests, to, name1, name2);
+    syncToSupabase(scores, newBreaks, newBests, to, name1, name2, undefined, []);
   };
 
   const undo = () => {
@@ -179,10 +200,31 @@ export default function Home() {
       const newBreaks = [...breaksRef.current];
       newBreaks[last.player] = last.breakBefore;
       breaksRef.current = newBreaks;
+
+      // Remove last ball
+      const newBalls = lastBallsRef.current.slice(0, -1);
+      lastBallsRef.current = newBalls;
+      setLastBalls([...newBalls]);
+
       setScores(newScores);
       setBreaks([...newBreaks]);
-      syncToSupabase(newScores, newBreaks, bestsRef.current, active, name1, name2);
+      syncToSupabase(newScores, newBreaks, bestsRef.current, active, name1, name2, undefined, newBalls);
     }
+  };
+
+  const resetAll = () => {
+    const newStart = Date.now();
+    setTimerStart(newStart);
+    breaksRef.current = [0, 0];
+    bestsRef.current = [0, 0];
+    lastBallsRef.current = [];
+    setScores([0, 0]);
+    setBreaks([0, 0]);
+    setBests([0, 0]);
+    setLastBalls([]);
+    setActiveState(0);
+    setHistory([]);
+    syncToSupabase([0, 0], [0, 0], [0, 0], 0, name1, name2, newStart, []);
   };
 
   const finDeFrame = () => {
@@ -191,13 +233,11 @@ export default function Home() {
   };
 
   const confirmFinDeFrame = async () => {
-    // Winner = li 3ndo score kbar
     const winnerIdx = scores[0] > scores[1] ? 0 : 1;
     const loserIdx = winnerIdx === 0 ? 1 : 0;
     const winnerName = names[winnerIdx];
     const loserName = names[loserIdx];
 
-    // Save f history
     const frame: FrameResult = {
       id: Date.now().toString(),
       winner: winnerName,
@@ -211,30 +251,29 @@ export default function Home() {
     const existing: FrameResult[] = saved ? JSON.parse(saved) : [];
     localStorage.setItem("snooker_frames", JSON.stringify([...existing, frame]));
 
-    // Fetch fresh queue mn Supabase
     const { data: freshQueue } = await supabase.from("queue").select("*").order("position");
     const currentQueue = freshQueue || [];
 
-    // Next player = awal wahd f queue
-    let nextPlayerName = loserName; // ila ma kaynch queue — loser yb9a
+    let nextPlayerName = loserName;
     if (currentQueue.length > 0) {
       const next = currentQueue[0];
       nextPlayerName = next.name;
       await supabase.from("queue").delete().eq("id", next.id);
     }
 
-    // Winner yb9a f blasto — next player ydkhel f blast loser
     const newName1 = winnerIdx === 0 ? winnerName : nextPlayerName;
     const newName2 = winnerIdx === 1 ? winnerName : nextPlayerName;
     const newStart = Date.now();
 
     breaksRef.current = [0, 0];
     bestsRef.current = [0, 0];
+    lastBallsRef.current = [];
 
     setShowConfirm(false);
     setScores([0, 0]);
     setBreaks([0, 0]);
     setBests([0, 0]);
+    setLastBalls([]);
     setActiveState(0);
     setHistory([]);
     setName1(newName1);
@@ -249,6 +288,7 @@ export default function Home() {
       player1_name: newName1,
       player2_name: newName2,
       timer_start: newStart,
+      last_balls: [],
       updated_at: new Date().toISOString()
     }).eq("id", 1);
   };
