@@ -144,7 +144,7 @@ export default function Display() {
         </div>
 
         {/* Scoreboard */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 110px 1fr", gap: 20, alignItems: "center", marginBottom: 20 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr minmax(140px, 18vw) 1fr", gap: 20, alignItems: "center", marginBottom: 20 }}>
 
           {/* Player 1 */}
           <div style={{
