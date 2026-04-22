@@ -112,73 +112,27 @@ export default function Display() {
   return (
     <div style={{
       background: `linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('/bg.jpg') center/cover no-repeat fixed`,
-      minHeight: "100vh", display: "flex", fontFamily: "'Segoe UI', sans-serif", overflow: "hidden"
+      minHeight: "100vh", display: "flex", flexDirection: "column",
+      fontFamily: "'Segoe UI', sans-serif", overflow: "hidden"
     }}>
-
-      {/* Queue sidebar */}
-      <div style={{
-        width: 240, padding: "28px 16px",
-        background: "rgba(0,0,0,0.6)",
-        borderRight: "1px solid rgba(255,255,255,0.05)",
-        display: "flex", flexDirection: "column", gap: 10
-      }}>
-        <div style={{
-          fontSize: 10, letterSpacing: 4, color: "#555",
-          textTransform: "uppercase", marginBottom: 16,
-          borderBottom: "1px solid rgba(255,255,255,0.05)", paddingBottom: 10
-        }}>
-          Waiting list
-        </div>
-        {queue.length === 0 ? (
-          <div style={{ fontSize: 13, color: "#333" }}>—</div>
-        ) : queue.map((q, idx) => (
-          <div key={q.id} style={{
-            display: "flex", alignItems: "center", gap: 10,
-            padding: "12px 14px", borderRadius: 10,
-            background: idx === 0 ? "rgba(29,158,117,0.12)" : "rgba(255,255,255,0.02)",
-            border: `1px solid ${idx === 0 ? "rgba(29,158,117,0.4)" : "rgba(255,255,255,0.04)"}`,
-          }}>
-            <div style={{
-              width: 28, height: 28, borderRadius: "50%",
-              background: idx === 0 ? "#1D9E75" : "#1a1a1a",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 12, fontWeight: 600, color: "#fff", flexShrink: 0,
-              border: idx === 0 ? "none" : "1px solid #2a2a2a"
-            }}>
-              {idx + 1}
-            </div>
-            <div style={{
-              fontSize: 14, color: idx === 0 ? "#1D9E75" : "#555",
-              textTransform: "uppercase", letterSpacing: 1, fontWeight: idx === 0 ? 600 : 400
-            }}>
-              {q.name}
-            </div>
-          </div>
-        ))}
-      </div>
 
       {/* Main content */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", padding: "32px 56px" }}>
 
         {/* Header */}
-        <div style={{ textAlign: "center", marginBottom: 28 }}>
+        <div style={{ textAlign: "center", marginBottom: 24 }}>
           <div style={{
-            fontSize: 13,
-            color: "rgba(255,255,255,0.25)",
-            letterSpacing: 10,
-            textTransform: "uppercase",
-            fontFamily: "Georgia, serif",
-            marginBottom: 6
+            fontSize: 13, color: "rgba(255,255,255,0.25)",
+            letterSpacing: 10, textTransform: "uppercase",
+            fontFamily: "Georgia, serif", marginBottom: 6
           }}>
             — Welcome to —
           </div>
           <div style={{
             fontSize: "clamp(50px, 7vw, 100px)",
             fontFamily: "'Times New Roman', serif",
-            fontWeight: 900,
-            fontStyle: "italic",
-            letterSpacing: 10,
-            lineHeight: 1,
+            fontWeight: 900, fontStyle: "italic",
+            letterSpacing: 10, lineHeight: 1,
             background: "linear-gradient(180deg, #ffffff 0%, #d4af37 40%, #ffffff 60%, #b8860b 100%)",
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
@@ -190,11 +144,11 @@ export default function Display() {
         </div>
 
         {/* Scoreboard */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 110px 1fr", gap: 20, alignItems: "center", marginBottom: 24 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 110px 1fr", gap: 20, alignItems: "center", marginBottom: 20 }}>
 
           {/* Player 1 */}
           <div style={{
-            padding: "32px 28px", borderRadius: 20, textAlign: "center",
+            padding: "28px 28px", borderRadius: 20, textAlign: "center",
             background: game.active === 0
               ? "linear-gradient(145deg, rgba(13,26,46,0.95), rgba(20,40,70,0.9))"
               : "rgba(15,15,20,0.7)",
@@ -203,19 +157,19 @@ export default function Display() {
           }}>
             <div style={{
               fontSize: 20, letterSpacing: 4, color: game.active === 0 ? "#85B7EB" : "#444",
-              textTransform: "uppercase", marginBottom: 14, fontWeight: 600
+              textTransform: "uppercase", marginBottom: 12, fontWeight: 600
             }}>
               {game.player1_name}
             </div>
             {balls1.length > 0 && <BallsRow balls={balls1} />}
             <div style={{
               fontSize: "clamp(90px, 12vw, 160px)", fontWeight: 700,
-              lineHeight: 1, color: "#fff", margin: "0 0 20px",
+              lineHeight: 1, color: "#fff", margin: "0 0 16px",
               textShadow: game.active === 0 ? "0 0 50px rgba(55,138,221,0.5)" : "none"
             }}>
               {game.score1}
             </div>
-            <div style={{ fontSize: 16, color: "#555", marginBottom: 6 }}>
+            <div style={{ fontSize: 16, color: "#555", marginBottom: 4 }}>
               Break <span style={{ color: game.active === 0 ? "#85B7EB" : "#666", fontSize: 20, fontWeight: 600 }}>{game.break1}</span>
             </div>
             <div style={{ fontSize: 13, color: "#333" }}>
@@ -223,13 +177,10 @@ export default function Display() {
             </div>
           </div>
 
-          {/* Center */}
+          {/* Center diff */}
           <div style={{ textAlign: "center" }}>
             <div style={{ fontSize: 10, color: "#333", textTransform: "uppercase", letterSpacing: 2, marginBottom: 8 }}>diff</div>
-            <div style={{
-              fontSize: 52, fontWeight: 700, color: diff > 0 ? "#fff" : "#333",
-              lineHeight: 1, marginBottom: 8
-            }}>
+            <div style={{ fontSize: 52, fontWeight: 700, color: diff > 0 ? "#fff" : "#333", lineHeight: 1, marginBottom: 8 }}>
               {diff}
             </div>
             <div style={{ fontSize: 11, color: "#444", letterSpacing: 1 }}>
@@ -242,7 +193,7 @@ export default function Display() {
 
           {/* Player 2 */}
           <div style={{
-            padding: "32px 28px", borderRadius: 20, textAlign: "center",
+            padding: "28px 28px", borderRadius: 20, textAlign: "center",
             background: game.active === 1
               ? "linear-gradient(145deg, rgba(42,16,8,0.95), rgba(60,20,10,0.9))"
               : "rgba(15,15,20,0.7)",
@@ -251,19 +202,19 @@ export default function Display() {
           }}>
             <div style={{
               fontSize: 20, letterSpacing: 4, color: game.active === 1 ? "#F0997B" : "#444",
-              textTransform: "uppercase", marginBottom: 14, fontWeight: 600
+              textTransform: "uppercase", marginBottom: 12, fontWeight: 600
             }}>
               {game.player2_name}
             </div>
             {balls2.length > 0 && <BallsRow balls={balls2} />}
             <div style={{
               fontSize: "clamp(90px, 12vw, 160px)", fontWeight: 700,
-              lineHeight: 1, color: "#fff", margin: "0 0 20px",
+              lineHeight: 1, color: "#fff", margin: "0 0 16px",
               textShadow: game.active === 1 ? "0 0 50px rgba(216,90,48,0.5)" : "none"
             }}>
               {game.score2}
             </div>
-            <div style={{ fontSize: 16, color: "#555", marginBottom: 6 }}>
+            <div style={{ fontSize: 16, color: "#555", marginBottom: 4 }}>
               Break <span style={{ color: game.active === 1 ? "#F0997B" : "#666", fontSize: 20, fontWeight: 600 }}>{game.break2}</span>
             </div>
             <div style={{ fontSize: 13, color: "#333" }}>
@@ -274,19 +225,19 @@ export default function Display() {
         </div>
 
         {/* Active + Timer */}
-        <div style={{ textAlign: "center" }}>
-          <div style={{ fontSize: 12, color: "#444", letterSpacing: 3, textTransform: "uppercase", marginBottom: 10 }}>
+        <div style={{ textAlign: "center", marginBottom: 20 }}>
+          <div style={{ fontSize: 12, color: "#444", letterSpacing: 3, textTransform: "uppercase", marginBottom: 8 }}>
             Active: <span style={{ color: "#777" }}>{names[game.active]}</span>
           </div>
           <div style={{
             display: "inline-flex", alignItems: "center", gap: 10,
-            background: "rgba(0,0,0,0.5)", borderRadius: 30, padding: "12px 28px",
+            background: "rgba(0,0,0,0.5)", borderRadius: 30, padding: "10px 28px",
             border: "1px solid rgba(245,196,0,0.2)",
             boxShadow: "0 0 20px rgba(245,196,0,0.1)"
           }}>
             <span style={{ fontSize: 16, color: "#F5C400" }}>⏱</span>
             <span style={{
-              fontSize: 30, fontWeight: 600, color: "#F5C400",
+              fontSize: 28, fontWeight: 600, color: "#F5C400",
               letterSpacing: 4, fontVariantNumeric: "tabular-nums",
               fontFamily: "monospace"
             }}>
@@ -296,6 +247,47 @@ export default function Display() {
         </div>
 
       </div>
+
+      {/* Waiting list - taht */}
+      {queue.length > 0 && (
+        <div style={{
+          padding: "14px 56px",
+          background: "rgba(0,0,0,0.6)",
+          borderTop: "1px solid rgba(255,255,255,0.05)",
+          display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap"
+        }}>
+          <div style={{
+            fontSize: 9, letterSpacing: 4, color: "#444",
+            textTransform: "uppercase", flexShrink: 0
+          }}>
+            Waiting:
+          </div>
+          {queue.map((q, idx) => (
+            <div key={q.id} style={{
+              display: "flex", alignItems: "center", gap: 8,
+              padding: "6px 14px", borderRadius: 20,
+              background: idx === 0 ? "rgba(29,158,117,0.15)" : "rgba(255,255,255,0.03)",
+              border: `1px solid ${idx === 0 ? "rgba(29,158,117,0.4)" : "rgba(255,255,255,0.06)"}`,
+            }}>
+              <div style={{
+                width: 20, height: 20, borderRadius: "50%",
+                background: idx === 0 ? "#1D9E75" : "#2a2a2a",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 10, fontWeight: 600, color: "#fff", flexShrink: 0
+              }}>
+                {idx + 1}
+              </div>
+              <span style={{
+                fontSize: 13, color: idx === 0 ? "#1D9E75" : "#555",
+                textTransform: "uppercase", letterSpacing: 1, fontWeight: idx === 0 ? 600 : 400
+              }}>
+                {q.name}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
     </div>
   );
 }
