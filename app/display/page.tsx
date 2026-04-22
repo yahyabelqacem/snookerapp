@@ -178,19 +178,39 @@ export default function Display() {
           </div>
 
           {/* Center diff */}
-          <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: "clamp(13px, 1.5vw, 20px)", color: "#444", textTransform: "uppercase", letterSpacing: 6, marginBottom: 8 }}>DIFFERENCE</div>
-            <div style={{ fontSize: 73, fontWeight: 950, color: diff > 0 ? "#fff" : "#33990b", lineHeight: 1, marginBottom: 8 }}>
-              {diff}
-            </div>
-            <div style={{ fontSize: 11, color: "#444", letterSpacing: 1 }}>
-              {leader === null ? "equal" : `${names[leader]}`}
-            </div>
-            <div style={{ fontSize: 10, color: "#333", marginTop: 2 }}>
-              {leader !== null ? "leads" : ""}
-            </div>
-          </div>
-
+<div style={{
+  textAlign: "center",
+  padding: "28px 24px",
+  borderRadius: 20,
+  background: "rgba(15,15,20,0.85)",
+  border: "2px solid rgba(212,175,55,0.5)",
+  boxShadow: "0 0 40px rgba(212,175,55,0.15)",
+}}>
+  <div style={{
+    fontSize: "clamp(10px, 1.2vw, 16px)",
+    color: "#d4af37",
+    textTransform: "uppercase",
+    letterSpacing: 4,
+    marginBottom: 8
+  }}>
+    DIFFERENCE
+  </div>
+  <div style={{
+    fontSize: "clamp(60px, 8vw, 110px)",
+    fontWeight: 900,
+    color: diff > 0 ? "#fff" : "#33990b",
+    lineHeight: 1,
+    marginBottom: 12,
+  }}>
+    {diff}
+  </div>
+  <div style={{ fontSize: "clamp(13px, 1.5vw, 18px)", color: "#aaa", letterSpacing: 2 }}>
+    {leader === null ? "equal" : `${names[leader]}`}
+  </div>
+  <div style={{ fontSize: 11, color: "#555", letterSpacing: 2, marginTop: 2 }}>
+    {leader !== null ? "leads" : ""}
+  </div>
+</div>
           {/* Player 2 */}
           <div style={{
             padding: "28px 28px", borderRadius: 20, textAlign: "center",
