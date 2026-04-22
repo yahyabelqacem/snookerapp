@@ -179,8 +179,8 @@ export default function Display() {
 
           {/* Center diff */}
           <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 12, color: "#333", textTransform: "uppercase", letterSpacing: 2, marginBottom: 8 }}>diff</div>
-            <div style={{ fontSize: 73, fontWeight: 950, color: diff > 0 ? "#fff" : "#333", lineHeight: 1, marginBottom: 8 }}>
+            <div style={{ fontSize: "clamp(13px, 1.5vw, 20px)", color: "#444", textTransform: "uppercase", letterSpacing: 6, marginBottom: 8 }}>DIFFERENCE</div>
+            <div style={{ fontSize: 73, fontWeight: 950, color: diff > 0 ? "#fff" : "#33990b", lineHeight: 1, marginBottom: 8 }}>
               {diff}
             </div>
             <div style={{ fontSize: 11, color: "#444", letterSpacing: 1 }}>
