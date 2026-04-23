@@ -15,6 +15,7 @@ type GameState = {
   timer_start: number;
   balls1: { color: string }[];
   balls2: { color: string }[];
+  game_started: boolean;
 };
 
 type QueueEntry = {
@@ -44,6 +45,7 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
     best1: 0, best2: 0,
     active: 0, timer_start: 0,
     balls1: [], balls2: [],
+    game_started: false,
   });
 
   const [queue, setQueue] = useState<QueueEntry[]>([]);
@@ -58,7 +60,6 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
     params.then(p => setTableId(parseInt(p.id)));
   }, []);
 
-  // Auto fullscreen on click
   useEffect(() => {
     const goFullscreen = () => {
       if (!document.fullscreenElement) {
@@ -70,7 +71,6 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
     return () => document.removeEventListener("click", goFullscreen);
   }, []);
 
-  // Track fullscreen change
   useEffect(() => {
     const onChange = () => setIsFullscreen(!!document.fullscreenElement);
     document.addEventListener("fullscreenchange", onChange);
@@ -79,7 +79,12 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
 
   const fetchAll = async (tid: number) => {
     const { data: g } = await supabase.from("game_state").select("*").eq("id", tid).single();
-    if (g) setGame({ ...g, balls1: Array.isArray(g.balls1) ? g.balls1 : [], balls2: Array.isArray(g.balls2) ? g.balls2 : [] });
+    if (g) setGame({
+      ...g,
+      balls1: Array.isArray(g.balls1) ? g.balls1 : [],
+      balls2: Array.isArray(g.balls2) ? g.balls2 : [],
+      game_started: g.game_started || false,
+    });
     const { data: q } = await supabase.from("queue").select("*").eq("table_id", tid).order("position");
     if (q) setQueue(q);
   };
@@ -114,12 +119,7 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
   const getRealColor = (color: string) => BALL_COLORS[color] || color;
 
   const BallsRow = ({ balls }: { balls: { color: string }[] }) => (
-    <div style={{
-      display: "flex", gap: 6, marginBottom: 12,
-      overflowX: "auto", overflowY: "hidden",
-      maxWidth: "100%", padding: "4px 2px",
-      scrollbarWidth: "none", flexWrap: "nowrap",
-    }}>
+    <div style={{ display: "flex", gap: 6, marginBottom: 12, overflowX: "auto", overflowY: "hidden", maxWidth: "100%", padding: "4px 2px", scrollbarWidth: "none", flexWrap: "nowrap" }}>
       {balls.map((b, i) => {
         const c = getRealColor(b.color);
         return (
@@ -136,11 +136,51 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
     </div>
   );
 
-  if (!tableId) return (
-    <div style={{ background: "#0d0d0f", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", color: "#444" }}>
-      Loading...
-    </div>
-  );
+  if (!tableId) return <div style={{ background: "#0d0d0f", minHeight: "100vh" }} />;
+
+  // Waiting screen
+  if (!game.game_started) {
+    return (
+      <div style={{
+        background: `linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.85)), url('/bg.jpg') center/cover no-repeat fixed`,
+        minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
+        fontFamily: "'Segoe UI', sans-serif", cursor: "default"
+      }}>
+        <div style={{ textAlign: "center" }}>
+          <div style={{
+            fontSize: "clamp(50px, 7vw, 100px)",
+            fontFamily: "'Times New Roman', serif",
+            fontWeight: 900, fontStyle: "italic", letterSpacing: 10, lineHeight: 1,
+            background: "linear-gradient(180deg, #ffffff 0%, #d4af37 40%, #ffffff 60%, #b8860b 100%)",
+            WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+            filter: "drop-shadow(0 0 20px rgba(212,175,55,0.4))",
+            marginBottom: 16
+          }}>
+            JET7POOL
+          </div>
+          <div style={{ fontSize: 12, color: "#444", letterSpacing: 4, textTransform: "uppercase", marginBottom: 20 }}>
+            Table {tableId}
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, justifyContent: "center" }}>
+            <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#333", animation: "pulse 1.5s infinite" }} />
+            <div style={{ fontSize: 15, color: "#444", letterSpacing: 3, textTransform: "uppercase" }}>
+              Waiting for players
+            </div>
+            <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#333", animation: "pulse 1.5s infinite" }} />
+          </div>
+          {queue.length > 0 && (
+            <div style={{ marginTop: 30, display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+              {queue.map((q, idx) => (
+                <div key={q.id} style={{ padding: "6px 16px", borderRadius: 20, background: idx === 0 ? "rgba(29,158,117,0.15)" : "rgba(255,255,255,0.03)", border: `1px solid ${idx === 0 ? "rgba(29,158,117,0.4)" : "rgba(255,255,255,0.06)"}` }}>
+                  <span style={{ fontSize: 12, color: idx === 0 ? "#1D9E75" : "#444", textTransform: "uppercase", letterSpacing: 1 }}>{idx + 1}. {q.name}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{
@@ -150,23 +190,17 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
       cursor: isFullscreen ? "none" : "default",
     }}>
 
-      {/* Click to fullscreen hint */}
       {!isFullscreen && (
-        <div style={{
-          position: "fixed", bottom: 20, right: 20, zIndex: 100,
-          background: "rgba(0,0,0,0.6)", borderRadius: 10, padding: "8px 14px",
-          fontSize: 11, color: "#555", letterSpacing: 1, border: "1px solid #2a2a36"
-        }}>
+        <div style={{ position: "fixed", bottom: 20, right: 20, zIndex: 100, background: "rgba(0,0,0,0.6)", borderRadius: 10, padding: "8px 14px", fontSize: 11, color: "#555", letterSpacing: 1, border: "1px solid #2a2a36" }}>
           Click anywhere for fullscreen
         </div>
       )}
 
       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", padding: "32px 56px" }}>
 
-        {/* Header */}
-        <div style={{ textAlign: "center", marginBottom:150}}>
+        <div style={{ textAlign: "center", marginBottom: 16 }}>
           <div style={{
-            fontSize: "clamp(60px, 9vw, 130px)",
+            fontSize: "clamp(50px, 7vw, 100px)",
             fontFamily: "'Times New Roman', serif",
             fontWeight: 900, fontStyle: "italic", letterSpacing: 10, lineHeight: 1,
             background: "linear-gradient(180deg, #ffffff 0%, #d4af37 40%, #ffffff 60%, #b8860b 100%)",
@@ -181,7 +215,6 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
           </div>
         </div>
 
-        {/* Scoreboard */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 110px 1fr", gap: 20, alignItems: "center", marginBottom: 20 }}>
 
           <div style={{
@@ -239,7 +272,6 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
 
         </div>
 
-        {/* Active + Timer */}
         <div style={{ textAlign: "center", marginBottom: 20 }}>
           <div style={{ fontSize: 12, color: "#444", letterSpacing: 3, textTransform: "uppercase", marginBottom: 8 }}>
             Active: <span style={{ color: "#777" }}>{names[game.active]}</span>
@@ -254,7 +286,6 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
 
       </div>
 
-      {/* Waiting list bottom */}
       {queue.length > 0 && (
         <div style={{ padding: "14px 56px", background: "rgba(0,0,0,0.6)", borderTop: "1px solid rgba(255,255,255,0.05)", display: "flex", alignItems: "center", gap: 16, flexWrap: "nowrap", overflowX: "auto" }}>
           <div style={{ fontSize: 9, letterSpacing: 4, color: "#444", textTransform: "uppercase", flexShrink: 0 }}>Waiting:</div>
