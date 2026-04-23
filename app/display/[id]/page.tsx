@@ -38,16 +38,10 @@ const BALL_COLORS: Record<string, string> = {
 export default function DisplayPage({ params }: { params: Promise<{ id: string }> }) {
   const [tableId, setTableId] = useState(0);
   const [game, setGame] = useState<GameState>({
-    player1_name: "Player 1",
-    player2_name: "Player 2",
-    score1: 0, score2: 0,
-    break1: 0, break2: 0,
-    best1: 0, best2: 0,
-    active: 0, timer_start: 0,
-    balls1: [], balls2: [],
-    game_started: false,
+    player1_name: "Player 1", player2_name: "Player 2",
+    score1: 0, score2: 0, break1: 0, break2: 0, best1: 0, best2: 0,
+    active: 0, timer_start: 0, balls1: [], balls2: [], game_started: false,
   });
-
   const [queue, setQueue] = useState<QueueEntry[]>([]);
   const [elapsed, setElapsed] = useState("00:00");
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -115,7 +109,6 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
   const names = [game.player1_name, game.player2_name];
   const balls1 = Array.isArray(game.balls1) ? game.balls1 : [];
   const balls2 = Array.isArray(game.balls2) ? game.balls2 : [];
-
   const getRealColor = (color: string) => BALL_COLORS[color] || color;
 
   const BallsRow = ({ balls }: { balls: { color: string }[] }) => (
@@ -142,37 +135,70 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
   if (!game.game_started) {
     return (
       <div style={{
-        background: `linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.85)), url('/bg.jpg') center/cover no-repeat fixed`,
+        background: `linear-gradient(rgba(0,0,0,0.88), rgba(0,0,0,0.88)), url('/bg.jpg') center/cover no-repeat fixed`,
         minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
-        fontFamily: "'Segoe UI', sans-serif", cursor: "default"
+        fontFamily: "'Segoe UI', sans-serif",
       }}>
+        <style>{`
+          @keyframes spin { to { transform: rotate(360deg); } }
+          @keyframes pulse { 0%,100% { opacity:0.3; } 50% { opacity:1; } }
+        `}</style>
         <div style={{ textAlign: "center" }}>
           <div style={{
-            fontSize: "clamp(50px, 7vw, 100px)",
+            fontSize: "clamp(70px, 10vw, 140px)",
             fontFamily: "'Times New Roman', serif",
             fontWeight: 900, fontStyle: "italic", letterSpacing: 10, lineHeight: 1,
             background: "linear-gradient(180deg, #ffffff 0%, #d4af37 40%, #ffffff 60%, #b8860b 100%)",
             WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-            filter: "drop-shadow(0 0 20px rgba(212,175,55,0.4))",
-            marginBottom: 16
+            filter: "drop-shadow(0 0 30px rgba(212,175,55,0.5))",
+            marginBottom: 20
           }}>
             JET7POOL
           </div>
-          <div style={{ fontSize: 12, color: "#444", letterSpacing: 4, textTransform: "uppercase", marginBottom: 20 }}>
+          <div style={{
+            display: "inline-block",
+            background: "rgba(55,138,221,0.15)",
+            border: "1px solid rgba(55,138,221,0.3)",
+            borderRadius: 20, padding: "6px 24px",
+            fontSize: 14, color: "#85B7EB", letterSpacing: 4,
+            textTransform: "uppercase", marginBottom: 50
+          }}>
             Table {tableId}
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, justifyContent: "center" }}>
-            <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#333", animation: "pulse 1.5s infinite" }} />
-            <div style={{ fontSize: 15, color: "#444", letterSpacing: 3, textTransform: "uppercase" }}>
+
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+            <div style={{
+              width: 56, height: 56, borderRadius: "50%",
+              border: "3px solid rgba(212,175,55,0.2)",
+              borderTop: "3px solid rgba(212,175,55,0.8)",
+              animation: "spin 1.2s linear infinite",
+            }} />
+            <div style={{ fontSize: 16, color: "#555", letterSpacing: 5, textTransform: "uppercase" }}>
               Waiting for players
             </div>
-            <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#333", animation: "pulse 1.5s infinite" }} />
           </div>
+
           {queue.length > 0 && (
-            <div style={{ marginTop: 30, display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+            <div style={{ marginTop: 48, display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+              <div style={{ width: "100%", fontSize: 10, color: "#333", letterSpacing: 4, textTransform: "uppercase", marginBottom: 12 }}>
+                In queue
+              </div>
               {queue.map((q, idx) => (
-                <div key={q.id} style={{ padding: "6px 16px", borderRadius: 20, background: idx === 0 ? "rgba(29,158,117,0.15)" : "rgba(255,255,255,0.03)", border: `1px solid ${idx === 0 ? "rgba(29,158,117,0.4)" : "rgba(255,255,255,0.06)"}` }}>
-                  <span style={{ fontSize: 12, color: idx === 0 ? "#1D9E75" : "#444", textTransform: "uppercase", letterSpacing: 1 }}>{idx + 1}. {q.name}</span>
+                <div key={q.id} style={{
+                  display: "flex", alignItems: "center", gap: 10,
+                  padding: "10px 20px", borderRadius: 20,
+                  background: idx === 0 ? "rgba(29,158,117,0.12)" : "rgba(255,255,255,0.03)",
+                  border: `1px solid ${idx === 0 ? "rgba(29,158,117,0.4)" : "rgba(255,255,255,0.06)"}`,
+                }}>
+                  <div style={{
+                    width: 24, height: 24, borderRadius: "50%",
+                    background: idx === 0 ? "#1D9E75" : "#1a1a1a",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 11, fontWeight: 600, color: "#fff"
+                  }}>{idx + 1}</div>
+                  <span style={{ fontSize: 14, color: idx === 0 ? "#1D9E75" : "#444", textTransform: "uppercase", letterSpacing: 2 }}>
+                    {q.name}
+                  </span>
                 </div>
               ))}
             </div>
@@ -241,9 +267,7 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
 
           <div style={{ textAlign: "center" }}>
             <div style={{ fontSize: 10, color: "#333", textTransform: "uppercase", letterSpacing: 2, marginBottom: 8 }}>diff</div>
-            <div style={{ fontSize: 72, fontWeight: 900, color: diff > 0 ? "#fff" : "#333", lineHeight: 1, marginBottom: 8 }}>
-              {diff}
-            </div>
+            <div style={{ fontSize: 72, fontWeight: 900, color: diff > 0 ? "#fff" : "#333", lineHeight: 1, marginBottom: 8 }}>{diff}</div>
             <div style={{ fontSize: 11, color: "#444", letterSpacing: 1 }}>{leader === null ? "equal" : `${names[leader]}`}</div>
             <div style={{ fontSize: 10, color: "#333", marginTop: 2 }}>{leader !== null ? "leads" : ""}</div>
           </div>
