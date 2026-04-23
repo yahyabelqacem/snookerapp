@@ -94,15 +94,26 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
   const getRealColor = (color: string) => BALL_COLORS[color] || color;
 
   const BallsRow = ({ balls }: { balls: { color: string }[] }) => (
-    <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+    <div style={{
+      display: "flex",
+      gap: 6,
+      marginBottom: 12,
+      overflowX: "auto",
+      overflowY: "hidden",
+      maxWidth: "100%",
+      padding: "4px 2px",
+      scrollbarWidth: "none",
+      msOverflowStyle: "none",
+      flexWrap: "nowrap",
+    }}>
       {balls.map((b, i) => {
         const c = getRealColor(b.color);
         return (
           <div key={i} style={{
-            width: 36, height: 36, borderRadius: "50%",
+            width: 28, height: 28, borderRadius: "50%",
             background: `radial-gradient(circle at 35% 35%, white 2%, ${c}ff 40%, ${c}88 100%)`,
             border: "2px solid rgba(255,255,255,0.5)",
-            boxShadow: `0 0 12px ${c}cc, 0 2px 8px rgba(0,0,0,0.6)`,
+            boxShadow: `0 0 10px ${c}cc, 0 2px 6px rgba(0,0,0,0.5)`,
             filter: "brightness(1.2) saturate(1.3)",
             flexShrink: 0
           }} />
@@ -157,6 +168,7 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
             background: game.active === 0 ? "linear-gradient(145deg, rgba(13,26,46,0.95), rgba(20,40,70,0.9))" : "rgba(15,15,20,0.7)",
             border: `2px solid ${game.active === 0 ? "#378ADD" : "rgba(255,255,255,0.05)"}`,
             boxShadow: game.active === 0 ? "0 0 40px rgba(55,138,221,0.25)" : "none",
+            overflow: "hidden",
           }}>
             <div style={{ fontSize: 20, letterSpacing: 4, color: game.active === 0 ? "#85B7EB" : "#444", textTransform: "uppercase", marginBottom: 12, fontWeight: 600 }}>
               {game.player1_name}
@@ -189,6 +201,7 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
             background: game.active === 1 ? "linear-gradient(145deg, rgba(42,16,8,0.95), rgba(60,20,10,0.9))" : "rgba(15,15,20,0.7)",
             border: `2px solid ${game.active === 1 ? "#D85A30" : "rgba(255,255,255,0.05)"}`,
             boxShadow: game.active === 1 ? "0 0 40px rgba(216,90,48,0.25)" : "none",
+            overflow: "hidden",
           }}>
             <div style={{ fontSize: 20, letterSpacing: 4, color: game.active === 1 ? "#F0997B" : "#444", textTransform: "uppercase", marginBottom: 12, fontWeight: 600 }}>
               {game.player2_name}
@@ -224,10 +237,10 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
 
       {/* Waiting list bottom */}
       {queue.length > 0 && (
-        <div style={{ padding: "14px 56px", background: "rgba(0,0,0,0.6)", borderTop: "1px solid rgba(255,255,255,0.05)", display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+        <div style={{ padding: "14px 56px", background: "rgba(0,0,0,0.6)", borderTop: "1px solid rgba(255,255,255,0.05)", display: "flex", alignItems: "center", gap: 16, flexWrap: "nowrap", overflowX: "auto" }}>
           <div style={{ fontSize: 9, letterSpacing: 4, color: "#444", textTransform: "uppercase", flexShrink: 0 }}>Waiting:</div>
           {queue.map((q, idx) => (
-            <div key={q.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 14px", borderRadius: 20, background: idx === 0 ? "rgba(29,158,117,0.15)" : "rgba(255,255,255,0.03)", border: `1px solid ${idx === 0 ? "rgba(29,158,117,0.4)" : "rgba(255,255,255,0.06)"}` }}>
+            <div key={q.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 14px", borderRadius: 20, background: idx === 0 ? "rgba(29,158,117,0.15)" : "rgba(255,255,255,0.03)", border: `1px solid ${idx === 0 ? "rgba(29,158,117,0.4)" : "rgba(255,255,255,0.06)"}`, flexShrink: 0 }}>
               <div style={{ width: 20, height: 20, borderRadius: "50%", background: idx === 0 ? "#1D9E75" : "#2a2a2a", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 600, color: "#fff" }}>
                 {idx + 1}
               </div>
