@@ -105,6 +105,7 @@ export default function TablePage({ params }: { params: Promise<{ id: string }> 
   };
 
   const startGame = async () => {
+  console.log("startGame", tempName1, tempName2, tableId);
     if (!isValidName(tempName1) || !isValidName(tempName2)) return;
     const n1 = tempName1.trim().toUpperCase();
     const n2 = tempName2.trim().toUpperCase();
@@ -146,6 +147,7 @@ export default function TablePage({ params }: { params: Promise<{ id: string }> 
       balls1: balls1Ref.current, balls2: balls2Ref.current,
       updated_at: new Date().toISOString()
     }).eq("id", tableId);
+console.log("update tableId:", tableId);
   };
 
   const addScore = (pts: number) => {
@@ -257,7 +259,7 @@ export default function TablePage({ params }: { params: Promise<{ id: string }> 
   const diff = Math.abs(scores[0] - scores[1]);
   const playColors = diff < 7;
   const canStart = isValidName(tempName1) && isValidName(tempName2);
-  const tableLabel = tableId === 1 ? 9 : 10;
+  const tableLabel = tableId;
 
   if (!tableId || loading) return <div style={{ background: "#0d0d0f", minHeight: "100vh" }} />;
 
