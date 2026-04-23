@@ -276,40 +276,98 @@ export default function TablePage({ params }: { params: Promise<{ id: string }> 
   const tableLabel = tableId === 1 ? 9 : 10;
 
   if (!tableId) return <div style={{ background: "#0d0d0f", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", color: "#444" }}>Loading...</div>;
-
-  // Name Input Screen
+// Name Input Screen
   if (!started) {
     return (
-      <div style={{ background: "#0d0d0f", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "sans-serif" }}>
-        <div style={{ background: "#17171f", borderRadius: 20, padding: 40, maxWidth: 380, width: "90%", border: "1px solid #2a2a36", textAlign: "center" }}>
-          <div style={{ fontSize: 28, marginBottom: 6 }}>🎱</div>
-          <div style={{ fontSize: 11, color: "#555", letterSpacing: 4, textTransform: "uppercase", marginBottom: 4 }}>
-            JET7POOL
-          </div>
-          <div style={{ fontSize: 18, color: "#aaa", letterSpacing: 2, marginBottom: 28 }}>
-            Table {tableLabel}
+      <div style={{
+        background: "linear-gradient(135deg, #0a0a0f 0%, #0d1a2e 50%, #0a0f1a 100%)",
+        minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
+        fontFamily: "'Segoe UI', sans-serif",
+        position: "relative", overflow: "hidden"
+      }}>
+        {/* Background decorative circles */}
+        <div style={{ position: "absolute", width: 400, height: 400, borderRadius: "50%", background: "rgba(55,138,221,0.05)", top: -100, right: -100 }} />
+        <div style={{ position: "absolute", width: 300, height: 300, borderRadius: "50%", background: "rgba(29,158,117,0.05)", bottom: -80, left: -80 }} />
+
+        <div style={{
+          background: "rgba(255,255,255,0.03)",
+          backdropFilter: "blur(20px)",
+          borderRadius: 24, padding: "44px 40px",
+          maxWidth: 420, width: "90%",
+          border: "1px solid rgba(255,255,255,0.08)",
+          textAlign: "center", position: "relative", zIndex: 1
+        }}>
+          {/* Logo */}
+          <div style={{ marginBottom: 28 }}>
+            <div style={{
+              fontSize: "clamp(28px, 5vw, 42px)",
+              fontFamily: "'Times New Roman', serif",
+              fontWeight: 900, fontStyle: "italic",
+              letterSpacing: 6,
+              background: "linear-gradient(180deg, #ffffff 0%, #d4af37 40%, #ffffff 60%, #b8860b 100%)",
+              WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+              filter: "drop-shadow(0 0 15px rgba(212,175,55,0.3))",
+              marginBottom: 6
+            }}>
+              JET7POOL
+            </div>
+            <div style={{
+              display: "inline-block",
+              background: "rgba(55,138,221,0.15)",
+              border: "1px solid rgba(55,138,221,0.3)",
+              borderRadius: 20, padding: "4px 16px",
+              fontSize: 12, color: "#85B7EB", letterSpacing: 3, textTransform: "uppercase"
+            }}>
+              Table {tableLabel}
+            </div>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 24 }}>
+          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", letterSpacing: 2, textTransform: "uppercase", marginBottom: 24 }}>
+            Enter Players
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 28 }}>
             <div style={{ textAlign: "left" }}>
-              <div style={{ fontSize: 11, color: "#555", letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 }}>Player 1</div>
+              <div style={{ fontSize: 10, color: "rgba(133,183,235,0.6)", letterSpacing: 3, textTransform: "uppercase", marginBottom: 8, paddingLeft: 4 }}>
+                Player 1
+              </div>
               <input
                 value={tempName1}
                 onChange={e => setTempName1(e.target.value)}
                 onKeyDown={e => e.key === "Enter" && canStart && startGame()}
-                placeholder="Kteb isem..."
+                placeholder="Enter name..."
                 autoFocus
-                style={{ width: "100%", padding: "14px 16px", borderRadius: 12, border: `1px solid ${tempName1 && !isValidName(tempName1) ? "#E24B4A" : "#2a2a36"}`, background: "#0d0d0f", color: "#fff", fontSize: 15, outline: "none", boxSizing: "border-box" }}
+                style={{
+                  width: "100%", padding: "15px 18px",
+                  borderRadius: 14,
+                  border: `1.5px solid ${tempName1 && !isValidName(tempName1) ? "rgba(226,75,74,0.5)" : tempName1 && isValidName(tempName1) ? "rgba(29,158,117,0.5)" : "rgba(255,255,255,0.08)"}`,
+                  background: "rgba(255,255,255,0.04)",
+                  color: "#fff", fontSize: 16, fontWeight: 500,
+                  outline: "none", boxSizing: "border-box",
+                  letterSpacing: 1,
+                  transition: "border-color 0.2s"
+                }}
               />
             </div>
             <div style={{ textAlign: "left" }}>
-              <div style={{ fontSize: 11, color: "#555", letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 }}>Player 2</div>
+              <div style={{ fontSize: 10, color: "rgba(240,153,123,0.6)", letterSpacing: 3, textTransform: "uppercase", marginBottom: 8, paddingLeft: 4 }}>
+                Player 2
+              </div>
               <input
                 value={tempName2}
                 onChange={e => setTempName2(e.target.value)}
                 onKeyDown={e => e.key === "Enter" && canStart && startGame()}
-                placeholder="Kteb isem..."
-                style={{ width: "100%", padding: "14px 16px", borderRadius: 12, border: `1px solid ${tempName2 && !isValidName(tempName2) ? "#E24B4A" : "#2a2a36"}`, background: "#0d0d0f", color: "#fff", fontSize: 15, outline: "none", boxSizing: "border-box" }}
+                placeholder="Enter name..."
+                style={{
+                  width: "100%", padding: "15px 18px",
+                  borderRadius: 14,
+                  border: `1.5px solid ${tempName2 && !isValidName(tempName2) ? "rgba(226,75,74,0.5)" : tempName2 && isValidName(tempName2) ? "rgba(29,158,117,0.5)" : "rgba(255,255,255,0.08)"}`,
+                  background: "rgba(255,255,255,0.04)",
+                  color: "#fff", fontSize: 16, fontWeight: 500,
+                  outline: "none", boxSizing: "border-box",
+                  letterSpacing: 1,
+                  transition: "border-color 0.2s"
+                }}
               />
             </div>
           </div>
@@ -317,8 +375,20 @@ export default function TablePage({ params }: { params: Promise<{ id: string }> 
           <button
             onClick={startGame}
             disabled={!canStart}
-            style={{ width: "100%", padding: 16, borderRadius: 12, border: `1px solid ${canStart ? "#1a3a1a" : "#2a2a36"}`, background: canStart ? "#0a1a0a" : "#17171f", color: canStart ? "#1D9E75" : "#444", fontSize: 15, fontWeight: 500, cursor: canStart ? "pointer" : "default", letterSpacing: 2, textTransform: "uppercase" }}>
-            Start 🎱
+            style={{
+              width: "100%", padding: "16px",
+              borderRadius: 14,
+              border: "none",
+              background: canStart
+                ? "linear-gradient(135deg, #1D9E75 0%, #185FA5 100%)"
+                : "rgba(255,255,255,0.05)",
+              color: canStart ? "#fff" : "rgba(255,255,255,0.2)",
+              fontSize: 15, fontWeight: 600,
+              cursor: canStart ? "pointer" : "default",
+              letterSpacing: 3, textTransform: "uppercase",
+              boxShadow: canStart ? "0 4px 20px rgba(29,158,117,0.3)" : "none",
+            }}>
+            Start Game
           </button>
         </div>
       </div>
