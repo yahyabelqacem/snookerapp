@@ -140,9 +140,7 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
 
         {/* Header */}
         <div style={{ textAlign: "center", marginBottom: 24 }}>
-          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.25)", letterSpacing: 10, textTransform: "uppercase", fontFamily: "Georgia, serif", marginBottom: 6 }}>
-            — Welcome to —
-          </div>
+          
           <div style={{
             fontSize: "clamp(50px, 7vw, 100px)",
             fontFamily: "'Times New Roman', serif",
