@@ -1,116 +1,126 @@
 "use client";
 import { useEffect, useState } from "react";
-import { FrameResult } from "../types";
-import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { supabase } from "../lib/supabase";
+
+type Frame = {
+  id: string;
+  table_id: number;
+  winner: string;
+  loser: string;
+  winner_score: number;
+  loser_score: number;
+  date: string;
+  paid: boolean;
+};
 
 export default function History() {
-  const [frames, setFrames] = useState<FrameResult[]>([]);
+  const [frames, setFrames] = useState<Frame[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<"all" | "unpaid">("all");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const tableId = searchParams.get("table");
 
   useEffect(() => {
-    const saved = localStorage.getItem("snooker_frames");
-    if (saved) setFrames(JSON.parse(saved));
-  }, []);
+    fetchFrames();
+  }, [tableId]);
 
-  const togglePaid = (id: string) => {
-    const updated = frames.map(f => f.id === id ? { ...f, paid: !f.paid } : f);
-    setFrames(updated);
-    localStorage.setItem("snooker_frames", JSON.stringify(updated));
+  const fetchFrames = async () => {
+    setLoading(true);
+    let query = supabase.from("frames").select("*").order("created_at", { ascending: false });
+    if (tableId) query = query.eq("table_id", parseInt(tableId));
+    const { data } = await query;
+    if (data) setFrames(data);
+    setLoading(false);
   };
 
-  const deleteFrame = (id: string) => {
-    const updated = frames.filter(f => f.id !== id);
-    setFrames(updated);
-    localStorage.setItem("snooker_frames", JSON.stringify(updated));
+  const togglePaid = async (id: string, paid: boolean) => {
+    await supabase.from("frames").update({ paid: !paid }).eq("id", id);
+    setFrames(f => f.map(fr => fr.id === id ? { ...fr, paid: !paid } : fr));
   };
 
-  const clearAll = () => {
-    if (confirm("Wach bghiti t7yed ga3 l history?")) {
-      localStorage.removeItem("snooker_frames");
-      setFrames([]);
-    }
+  const deleteFrame = async (id: string) => {
+    await supabase.from("frames").delete().eq("id", id);
+    setFrames(f => f.filter(fr => fr.id !== id));
   };
 
+  const filtered = filter === "unpaid" ? frames.filter(f => !f.paid) : frames;
   const unpaidCount = frames.filter(f => !f.paid).length;
 
   return (
     <div style={{ background: "#0d0d0f", minHeight: "100vh", padding: "28px 24px", fontFamily: "sans-serif" }}>
-      <div style={{ maxWidth: 900, margin: "0 auto" }}>
 
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-          <Link href="/" style={{ color: "#555", fontSize: 13, textDecoration: "none", letterSpacing: 1 }}>
-            Back
-          </Link>
-          <h2 style={{ fontSize: 13, letterSpacing: 3, color: "#4a4a5a", textTransform: "uppercase" }}>
-            History
+      {/* Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", maxWidth: 700, margin: "0 auto 24px" }}>
+        <div>
+          <h2 style={{ fontSize: 13, letterSpacing: 3, color: "#4a4a5a", textTransform: "uppercase", margin: 0 }}>
+            History {tableId ? `— Table ${tableId}` : "— All Tables"}
           </h2>
-          <button onClick={clearAll}
-            style={{ background: "transparent", border: "none", color: "#442222", fontSize: 12, cursor: "pointer", letterSpacing: 1 }}>
-            Clear all
+          {unpaidCount > 0 && (
+            <div style={{ fontSize: 11, color: "#E24B4A", marginTop: 4 }}>
+              {unpaidCount} unpaid
+            </div>
+          )}
+        </div>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button onClick={() => router.back()}
+            style={{ background: "transparent", border: "1px solid #2a2a36", borderRadius: 8, color: "#555", fontSize: 12, cursor: "pointer", padding: "6px 12px" }}>
+            ← Back
           </button>
         </div>
+      </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 20 }}>
-          <div style={{ background: "#17171f", borderRadius: 12, padding: "14px 16px", textAlign: "center" }}>
-            <div style={{ fontSize: 10, color: "#444", textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>Total frames</div>
-            <div style={{ fontSize: 28, fontWeight: 500, color: "#fff" }}>{frames.length}</div>
-          </div>
-          <div style={{ background: "#1a0808", border: "1px solid #3a1a1a", borderRadius: 12, padding: "14px 16px", textAlign: "center" }}>
-            <div style={{ fontSize: 10, color: "#442222", textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>Unpaid</div>
-            <div style={{ fontSize: 28, fontWeight: 500, color: "#E24B4A" }}>{unpaidCount}</div>
-          </div>
-        </div>
+      {/* Filter */}
+      <div style={{ display: "flex", gap: 8, maxWidth: 700, margin: "0 auto 20px" }}>
+        <button onClick={() => setFilter("all")}
+          style={{ padding: "8px 16px", borderRadius: 8, border: `1px solid ${filter === "all" ? "#1D9E75" : "#2a2a36"}`, background: filter === "all" ? "rgba(29,158,117,0.1)" : "transparent", color: filter === "all" ? "#1D9E75" : "#555", fontSize: 12, cursor: "pointer" }}>
+          All ({frames.length})
+        </button>
+        <button onClick={() => setFilter("unpaid")}
+          style={{ padding: "8px 16px", borderRadius: 8, border: `1px solid ${filter === "unpaid" ? "#E24B4A" : "#2a2a36"}`, background: filter === "unpaid" ? "rgba(226,75,74,0.1)" : "transparent", color: filter === "unpaid" ? "#E24B4A" : "#555", fontSize: 12, cursor: "pointer" }}>
+          Unpaid ({unpaidCount})
+        </button>
+      </div>
 
-        {frames.length === 0 ? (
-          <div style={{ textAlign: "center", color: "#333", fontSize: 13, marginTop: 60, letterSpacing: 1 }}>
-            Ma kayn walo mazal...
-          </div>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {[...frames].reverse().map(f => (
-              <div key={f.id}
-                style={{ background: "#17171f", borderRadius: 12, padding: "14px 16px",
-                  border: `1px solid ${f.paid ? "#1a2a1a" : "#3a1a1a"}`,
-                  display: "grid", gridTemplateColumns: "1fr auto auto", alignItems: "center", gap: 8 }}>
-                <div>
-                  <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 6, flexWrap: "wrap" }}>
-                    <span style={{ fontSize: 11, background: "#0a1a0a", border: "1px solid #1a3a1a",
-                      color: "#1D9E75", padding: "2px 8px", borderRadius: 6, letterSpacing: 1, textTransform: "uppercase" }}>
-                      WIN
-                    </span>
-                    <span style={{ fontSize: 12, color: "#1D9E75", letterSpacing: 1, textTransform: "uppercase", fontWeight: 500 }}>
-                      {f.winner}
-                    </span>
-                    <span style={{ fontSize: 11, color: "#444" }}>{f.winnerScore} — {f.loserScore}</span>
-                    <span style={{ fontSize: 12, color: "#E24B4A", letterSpacing: 1, textTransform: "uppercase", fontWeight: 500 }}>
-                      {f.loser}
-                    </span>
-                    <span style={{ fontSize: 11, background: "#1a0808", border: "1px solid #3a1a1a",
-                      color: "#E24B4A", padding: "2px 8px", borderRadius: 6, letterSpacing: 1, textTransform: "uppercase" }}>
-                      LOSE
-                    </span>
-                  </div>
-                  <div style={{ fontSize: 10, color: "#333", letterSpacing: 0.5 }}>{f.date}</div>
-                </div>
-
-                <button onClick={() => togglePaid(f.id)}
-                  style={{ padding: "8px 14px", borderRadius: 8,
-                    border: `1px solid ${f.paid ? "#1a3a1a" : "#3a1a1a"}`,
-                    background: f.paid ? "#0a1a0a" : "#1a0808",
-                    color: f.paid ? "#1D9E75" : "#E24B4A",
-                    fontSize: 11, fontWeight: 500, cursor: "pointer", letterSpacing: 1, textTransform: "uppercase" }}>
-                  {f.paid ? "Paid" : "Unpaid"}
-                </button>
-
-                <button onClick={() => deleteFrame(f.id)}
-                  style={{ padding: "8px 12px", borderRadius: 8,
-                    border: "1px solid #3a1a1a", background: "#1a0808",
-                    color: "#E24B4A", fontSize: 13, cursor: "pointer" }}>
-                  ✕
-                </button>
+      {/* Frames */}
+      <div style={{ maxWidth: 700, margin: "0 auto", display: "flex", flexDirection: "column", gap: 10 }}>
+        {loading ? (
+          <div style={{ textAlign: "center", color: "#333", padding: 40 }}>Loading...</div>
+        ) : filtered.length === 0 ? (
+          <div style={{ textAlign: "center", color: "#333", padding: 40 }}>Ma kayn walo...</div>
+        ) : filtered.map(frame => (
+          <div key={frame.id} style={{
+            padding: "16px 20px", borderRadius: 14,
+            background: frame.paid ? "rgba(29,158,117,0.05)" : "rgba(226,75,74,0.05)",
+            border: `1px solid ${frame.paid ? "rgba(29,158,117,0.2)" : "rgba(226,75,74,0.2)"}`,
+            display: "flex", alignItems: "center", gap: 12
+          }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                <span style={{ fontSize: 14, color: "#1D9E75", fontWeight: 500 }}>{frame.winner}</span>
+                <span style={{ fontSize: 12, color: "#555" }}>{frame.winner_score} — {frame.loser_score}</span>
+                <span style={{ fontSize: 14, color: "#888" }}>{frame.loser}</span>
               </div>
-            ))}
+              <div style={{ display: "flex", gap: 12 }}>
+                <span style={{ fontSize: 11, color: "#444" }}>{frame.date}</span>
+                {frame.table_id && (
+                  <span style={{ fontSize: 11, color: "#333" }}>Table {frame.table_id}</span>
+                )}
+              </div>
+            </div>
+
+            <button onClick={() => togglePaid(frame.id, frame.paid)}
+              style={{ padding: "6px 14px", borderRadius: 8, border: `1px solid ${frame.paid ? "rgba(29,158,117,0.3)" : "rgba(226,75,74,0.3)"}`, background: frame.paid ? "rgba(29,158,117,0.1)" : "rgba(226,75,74,0.1)", color: frame.paid ? "#1D9E75" : "#E24B4A", fontSize: 11, cursor: "pointer", whiteSpace: "nowrap" }}>
+              {frame.paid ? "✓ Paid" : "Unpaid"}
+            </button>
+
+            <button onClick={() => deleteFrame(frame.id)}
+              style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid #2a2a36", background: "transparent", color: "#444", fontSize: 12, cursor: "pointer" }}>
+              ✕
+            </button>
           </div>
-        )}
+        ))}
       </div>
     </div>
   );

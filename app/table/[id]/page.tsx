@@ -2,7 +2,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
-import { FrameResult } from "../../types";
 
 const BALLS = [
   { name: "RED", pts: 1, color: "#993C1D" },
@@ -60,7 +59,6 @@ export default function TablePage({ params }: { params: Promise<{ id: string }> 
 
   useEffect(() => {
     if (!tableId) return;
-
     supabase.from("game_state").select("*").eq("id", tableId).single()
       .then(({ data }) => {
         if (data) {
@@ -78,7 +76,6 @@ export default function TablePage({ params }: { params: Promise<{ id: string }> 
           balls2Ref.current = Array.isArray(data.balls2) ? data.balls2 : [];
         }
       });
-
     fetchQueue();
     const channel = supabase
       .channel(`queue_changes_${tableId}`)
@@ -111,11 +108,9 @@ export default function TablePage({ params }: { params: Promise<{ id: string }> 
       score1: s[0], score2: s[1],
       break1: b[0], break2: b[1],
       best1: bs[0], best2: bs[1],
-      active: a,
-      player1_name: n1, player2_name: n2,
+      active: a, player1_name: n1, player2_name: n2,
       timer_start: ts !== undefined ? ts : timerStartRef.current,
-      balls1: balls1Ref.current,
-      balls2: balls2Ref.current,
+      balls1: balls1Ref.current, balls2: balls2Ref.current,
       updated_at: new Date().toISOString()
     }).eq("id", tableId);
   };
@@ -123,28 +118,21 @@ export default function TablePage({ params }: { params: Promise<{ id: string }> 
   const addScore = (pts: number) => {
     const p = active;
     const ball = BALLS.find(b => b.pts === pts);
-    const newBall = { color: ball?.color || "#fff" };
-    if (p === 0) balls1Ref.current = [...balls1Ref.current, newBall];
-    else balls2Ref.current = [...balls2Ref.current, newBall];
-    const newBreaks = [...breaksRef.current];
-    newBreaks[p] += pts;
-    breaksRef.current = newBreaks;
+    if (p === 0) balls1Ref.current = [...balls1Ref.current, { color: ball?.color || "#fff" }];
+    else balls2Ref.current = [...balls2Ref.current, { color: ball?.color || "#fff" }];
+    const newBreaks = [...breaksRef.current]; newBreaks[p] += pts; breaksRef.current = newBreaks;
     setHistory(h => [...h, { player: p, pts, breakBefore: breaksRef.current[p] - pts, bestBefore: bestsRef.current[p], isEndBreak: false }]);
     const newScores = scores.map((s, i) => i === p ? s + pts : s);
-    setScores(newScores);
-    setBreaks([...newBreaks]);
+    setScores(newScores); setBreaks([...newBreaks]);
     syncToSupabase(newScores, newBreaks, bestsRef.current, active, name1, name2);
   };
 
   const addFoul = (pts: number) => {
     const other = active === 0 ? 1 : 0;
-    const newBreaks = [...breaksRef.current];
-    newBreaks[other] += pts;
-    breaksRef.current = newBreaks;
+    const newBreaks = [...breaksRef.current]; newBreaks[other] += pts; breaksRef.current = newBreaks;
     setHistory(h => [...h, { player: other, pts, breakBefore: breaksRef.current[other] - pts, bestBefore: bestsRef.current[other], isEndBreak: false }]);
     const newScores = scores.map((s, i) => i === other ? s + pts : s);
-    setScores(newScores);
-    setBreaks([...newBreaks]);
+    setScores(newScores); setBreaks([...newBreaks]);
     syncToSupabase(newScores, newBreaks, bestsRef.current, active, name1, name2);
   };
 
@@ -181,15 +169,18 @@ export default function TablePage({ params }: { params: Promise<{ id: string }> 
   const confirmFinDeFrame = async () => {
     const winnerIdx = scores[0] > scores[1] ? 0 : 1;
     const loserIdx = winnerIdx === 0 ? 1 : 0;
-    const frame: FrameResult = {
+
+    // Save f Supabase machi localStorage
+    await supabase.from("frames").insert({
       id: Date.now().toString(),
-      winner: names[winnerIdx], loser: names[loserIdx],
-      winnerScore: scores[winnerIdx], loserScore: scores[loserIdx],
-      date: new Date().toLocaleString("fr-MA"), paid: false,
-    };
-    const saved = localStorage.getItem(`snooker_frames_${tableId}`);
-    const existing: FrameResult[] = saved ? JSON.parse(saved) : [];
-    localStorage.setItem(`snooker_frames_${tableId}`, JSON.stringify([...existing, frame]));
+      table_id: tableId,
+      winner: names[winnerIdx],
+      loser: names[loserIdx],
+      winner_score: scores[winnerIdx],
+      loser_score: scores[loserIdx],
+      date: new Date().toLocaleString("fr-MA"),
+      paid: false,
+    });
 
     const { data: freshQueue } = await supabase.from("queue").select("*").eq("table_id", tableId).order("position");
     const currentQueue = freshQueue || [];
