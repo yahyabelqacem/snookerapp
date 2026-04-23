@@ -31,8 +31,8 @@ type QueueEntry = {
 
 type BallEntry = { color: string };
 
-export default function TablePage({ params }: { params: { id: string } }) {
-  const tableId = parseInt(params.id);
+export default function TablePage({ params }: { params: Promise<{ id: string }> }) {
+  const [tableId, setTableId] = useState(0);
   const [scores, setScores] = useState([0, 0]);
   const [breaks, setBreaks] = useState([0, 0]);
   const [bests, setBests] = useState([0, 0]);
@@ -50,10 +50,17 @@ export default function TablePage({ params }: { params: { id: string } }) {
   const bestsRef = useRef([0, 0]);
   const balls1Ref = useRef<BallEntry[]>([]);
   const balls2Ref = useRef<BallEntry[]>([]);
+  const timerStartRef = useRef(Date.now());
   const router = useRouter();
   const names = [name1, name2];
 
   useEffect(() => {
+    params.then(p => setTableId(parseInt(p.id)));
+  }, []);
+
+  useEffect(() => {
+    if (!tableId) return;
+
     supabase.from("game_state").select("*").eq("id", tableId).single()
       .then(({ data }) => {
         if (data) {
@@ -64,6 +71,7 @@ export default function TablePage({ params }: { params: { id: string } }) {
           setName1(data.player1_name);
           setName2(data.player2_name);
           setTimerStart(data.timer_start || Date.now());
+          timerStartRef.current = data.timer_start || Date.now();
           breaksRef.current = [data.break1, data.break2];
           bestsRef.current = [data.best1, data.best2];
           balls1Ref.current = Array.isArray(data.balls1) ? data.balls1 : [];
@@ -80,6 +88,7 @@ export default function TablePage({ params }: { params: { id: string } }) {
   }, [tableId]);
 
   const fetchQueue = async () => {
+    if (!tableId) return;
     const { data } = await supabase.from("queue").select("*").eq("table_id", tableId).order("position");
     if (data) setQueue(data);
   };
@@ -104,7 +113,7 @@ export default function TablePage({ params }: { params: { id: string } }) {
       best1: bs[0], best2: bs[1],
       active: a,
       player1_name: n1, player2_name: n2,
-      timer_start: ts !== undefined ? ts : timerStart,
+      timer_start: ts !== undefined ? ts : timerStartRef.current,
       balls1: balls1Ref.current,
       balls2: balls2Ref.current,
       updated_at: new Date().toISOString()
@@ -117,7 +126,6 @@ export default function TablePage({ params }: { params: { id: string } }) {
     const newBall = { color: ball?.color || "#fff" };
     if (p === 0) balls1Ref.current = [...balls1Ref.current, newBall];
     else balls2Ref.current = [...balls2Ref.current, newBall];
-
     const newBreaks = [...breaksRef.current];
     newBreaks[p] += pts;
     breaksRef.current = newBreaks;
@@ -196,6 +204,8 @@ export default function TablePage({ params }: { params: { id: string } }) {
     const newStart = Date.now();
     breaksRef.current = [0, 0]; bestsRef.current = [0, 0];
     balls1Ref.current = []; balls2Ref.current = [];
+    timerStartRef.current = newStart;
+
     setShowConfirm(false); setScores([0, 0]); setBreaks([0, 0]); setBests([0, 0]);
     setActiveState(0); setHistory([]); setName1(newName1); setName2(newName2); setTimerStart(newStart);
 
@@ -208,6 +218,8 @@ export default function TablePage({ params }: { params: { id: string } }) {
 
   const diff = Math.abs(scores[0] - scores[1]);
   const leader = scores[0] === scores[1] ? null : scores[0] > scores[1] ? 0 : 1;
+
+  if (!tableId) return <div style={{ background: "#0d0d0f", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", color: "#444" }}>Loading...</div>;
 
   return (
     <div style={{ background: "#0d0d0f", minHeight: "100vh", padding: "28px 24px", fontFamily: "sans-serif" }}>
@@ -237,7 +249,7 @@ export default function TablePage({ params }: { params: { id: string } }) {
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999 }}>
           <div style={{ background: "#17171f", borderRadius: 16, padding: 24, maxWidth: 380, width: "90%", border: "1px solid #2a2a36" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <div style={{ fontSize: 13, color: "#aaa", letterSpacing: 2, textTransform: "uppercase" }}>Waiting list — Table {tableId}</div>
+              <div style={{ fontSize: 13, color: "#aaa", letterSpacing: 2, textTransform: "uppercase" }}>Waiting — Table {tableId}</div>
               <button onClick={() => setShowQueue(false)} style={{ background: "transparent", border: "none", color: "#555", fontSize: 18, cursor: "pointer" }}>✕</button>
             </div>
             <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>

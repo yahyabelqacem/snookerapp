@@ -34,9 +34,8 @@ const BALL_COLORS: Record<string, string> = {
   "#2a2a36": "#111111",
 };
 
-export default function DisplayPage({ params }: { params: { id: string } }) {
-  const tableId = parseInt(params.id);
-
+export default function DisplayPage({ params }: { params: Promise<{ id: string }> }) {
+  const [tableId, setTableId] = useState(0);
   const [game, setGame] = useState<GameState>({
     player1_name: "Player 1",
     player2_name: "Player 2",
@@ -50,20 +49,26 @@ export default function DisplayPage({ params }: { params: { id: string } }) {
   const [queue, setQueue] = useState<QueueEntry[]>([]);
   const [elapsed, setElapsed] = useState("00:00");
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const pollRef = useRef<NodeJS.Timeout | null>(null);
   const gameRef = useRef(game);
   gameRef.current = game;
 
-  const fetchAll = async () => {
-    const { data: g } = await supabase.from("game_state").select("*").eq("id", tableId).single();
+  useEffect(() => {
+    params.then(p => setTableId(parseInt(p.id)));
+  }, []);
+
+  const fetchAll = async (tid: number) => {
+    const { data: g } = await supabase.from("game_state").select("*").eq("id", tid).single();
     if (g) setGame({ ...g, balls1: Array.isArray(g.balls1) ? g.balls1 : [], balls2: Array.isArray(g.balls2) ? g.balls2 : [] });
-    const { data: q } = await supabase.from("queue").select("*").eq("table_id", tableId).order("position");
+    const { data: q } = await supabase.from("queue").select("*").eq("table_id", tid).order("position");
     if (q) setQueue(q);
   };
 
   useEffect(() => {
-    fetchAll();
-    const poll = setInterval(fetchAll, 2000);
-    return () => clearInterval(poll);
+    if (!tableId) return;
+    fetchAll(tableId);
+    pollRef.current = setInterval(() => fetchAll(tableId), 2000);
+    return () => { if (pollRef.current) clearInterval(pollRef.current); };
   }, [tableId]);
 
   useEffect(() => {
@@ -103,6 +108,12 @@ export default function DisplayPage({ params }: { params: { id: string } }) {
           }} />
         );
       })}
+    </div>
+  );
+
+  if (!tableId) return (
+    <div style={{ background: "#0d0d0f", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", color: "#444" }}>
+      Loading...
     </div>
   );
 
