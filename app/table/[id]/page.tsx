@@ -30,6 +30,12 @@ type QueueEntry = {
 
 type BallEntry = { color: string };
 
+const RESERVED = ["player 1", "player 2", "player1", "player2", "p1", "p2"];
+
+function isValidName(name: string) {
+  return name.trim().length >= 2 && !RESERVED.includes(name.trim().toLowerCase());
+}
+
 export default function TablePage({ params }: { params: Promise<{ id: string }> }) {
   const [tableId, setTableId] = useState(0);
   const [scores, setScores] = useState([0, 0]);
@@ -38,7 +44,7 @@ export default function TablePage({ params }: { params: Promise<{ id: string }> 
   const [active, setActiveState] = useState(0);
   const [name1, setName1] = useState("");
   const [name2, setName2] = useState("");
-  const [showNameInput, setShowNameInput] = useState(false);
+  const [started, setStarted] = useState(false);
   const [tempName1, setTempName1] = useState("");
   const [tempName2, setTempName2] = useState("");
   const [history, setHistory] = useState<HistoryEntry[]>([]);
@@ -69,19 +75,19 @@ export default function TablePage({ params }: { params: Promise<{ id: string }> 
           setBreaks([data.break1, data.break2]);
           setBests([data.best1, data.best2]);
           setActiveState(data.active);
-          // Ila smiyat kaynin deja — khliha, ila la — show popup
-          if (data.player1_name && data.player1_name !== "Player 1" && data.player2_name && data.player2_name !== "Player 2") {
-            setName1(data.player1_name);
-            setName2(data.player2_name);
-          } else {
-            setShowNameInput(true);
-          }
           setTimerStart(data.timer_start || Date.now());
           timerStartRef.current = data.timer_start || Date.now();
           breaksRef.current = [data.break1, data.break2];
           bestsRef.current = [data.best1, data.best2];
           balls1Ref.current = Array.isArray(data.balls1) ? data.balls1 : [];
           balls2Ref.current = Array.isArray(data.balls2) ? data.balls2 : [];
+
+          // Ila smiyat sḥiḥa — started direct
+          if (isValidName(data.player1_name || "") && isValidName(data.player2_name || "")) {
+            setName1(data.player1_name);
+            setName2(data.player2_name);
+            setStarted(true);
+          }
         }
       });
     fetchQueue();
@@ -99,15 +105,23 @@ export default function TablePage({ params }: { params: Promise<{ id: string }> 
   };
 
   const startGame = async () => {
-    if (!tempName1.trim() || !tempName2.trim()) return;
+    if (!isValidName(tempName1) || !isValidName(tempName2)) return;
     const n1 = tempName1.trim().toUpperCase();
     const n2 = tempName2.trim().toUpperCase();
     setName1(n1);
     setName2(n2);
-    setShowNameInput(false);
+    setStarted(true);
     const newStart = Date.now();
     timerStartRef.current = newStart;
     setTimerStart(newStart);
+    breaksRef.current = [0, 0];
+    bestsRef.current = [0, 0];
+    balls1Ref.current = [];
+    balls2Ref.current = [];
+    setScores([0, 0]);
+    setBreaks([0, 0]);
+    setBests([0, 0]);
+    setHistory([]);
     await supabase.from("game_state").update({
       player1_name: n1, player2_name: n2,
       score1: 0, score2: 0,
@@ -241,6 +255,14 @@ export default function TablePage({ params }: { params: Promise<{ id: string }> 
     setActiveState(0); setHistory([]);
     setName1(newName1); setName2(newName2); setTimerStart(newStart);
 
+    // Ila loser ytbeddel b queue — show name input ila next player mn queue
+    // Ila ma kaynch queue — show name input bash ydkheloo smiyat jdad
+    if (currentQueue.length === 0) {
+      setStarted(false);
+      setTempName1("");
+      setTempName2("");
+    }
+
     await supabase.from("game_state").update({
       score1: 0, score2: 0, break1: 0, break2: 0, best1: 0, best2: 0,
       active: 0, player1_name: newName1, player2_name: newName2,
@@ -250,53 +272,62 @@ export default function TablePage({ params }: { params: Promise<{ id: string }> 
 
   const diff = Math.abs(scores[0] - scores[1]);
   const playColors = diff < 7;
+  const canStart = isValidName(tempName1) && isValidName(tempName2);
+  const tableLabel = tableId === 1 ? 9 : 10;
 
   if (!tableId) return <div style={{ background: "#0d0d0f", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", color: "#444" }}>Loading...</div>;
+
+  // Name Input Screen
+  if (!started) {
+    return (
+      <div style={{ background: "#0d0d0f", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "sans-serif" }}>
+        <div style={{ background: "#17171f", borderRadius: 20, padding: 40, maxWidth: 380, width: "90%", border: "1px solid #2a2a36", textAlign: "center" }}>
+          <div style={{ fontSize: 28, marginBottom: 6 }}>🎱</div>
+          <div style={{ fontSize: 11, color: "#555", letterSpacing: 4, textTransform: "uppercase", marginBottom: 4 }}>
+            JET7POOL
+          </div>
+          <div style={{ fontSize: 18, color: "#aaa", letterSpacing: 2, marginBottom: 28 }}>
+            Table {tableLabel}
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 24 }}>
+            <div style={{ textAlign: "left" }}>
+              <div style={{ fontSize: 11, color: "#555", letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 }}>Player 1</div>
+              <input
+                value={tempName1}
+                onChange={e => setTempName1(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && canStart && startGame()}
+                placeholder="Kteb isem..."
+                autoFocus
+                style={{ width: "100%", padding: "14px 16px", borderRadius: 12, border: `1px solid ${tempName1 && !isValidName(tempName1) ? "#E24B4A" : "#2a2a36"}`, background: "#0d0d0f", color: "#fff", fontSize: 15, outline: "none", boxSizing: "border-box" }}
+              />
+            </div>
+            <div style={{ textAlign: "left" }}>
+              <div style={{ fontSize: 11, color: "#555", letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 }}>Player 2</div>
+              <input
+                value={tempName2}
+                onChange={e => setTempName2(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && canStart && startGame()}
+                placeholder="Kteb isem..."
+                style={{ width: "100%", padding: "14px 16px", borderRadius: 12, border: `1px solid ${tempName2 && !isValidName(tempName2) ? "#E24B4A" : "#2a2a36"}`, background: "#0d0d0f", color: "#fff", fontSize: 15, outline: "none", boxSizing: "border-box" }}
+              />
+            </div>
+          </div>
+
+          <button
+            onClick={startGame}
+            disabled={!canStart}
+            style={{ width: "100%", padding: 16, borderRadius: 12, border: `1px solid ${canStart ? "#1a3a1a" : "#2a2a36"}`, background: canStart ? "#0a1a0a" : "#17171f", color: canStart ? "#1D9E75" : "#444", fontSize: 15, fontWeight: 500, cursor: canStart ? "pointer" : "default", letterSpacing: 2, textTransform: "uppercase" }}>
+            Start 🎱
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ background: "#0d0d0f", minHeight: "100vh", padding: "28px 24px", fontFamily: "sans-serif" }}>
 
-      {/* Name Input Popup */}
-      {showNameInput && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.92)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999 }}>
-          <div style={{ background: "#17171f", borderRadius: 20, padding: 36, maxWidth: 360, width: "90%", border: "1px solid #2a2a36", textAlign: "center" }}>
-            <div style={{ fontSize: 22, marginBottom: 6 }}>🎱</div>
-            <div style={{ fontSize: 15, color: "#aaa", letterSpacing: 2, textTransform: "uppercase", marginBottom: 24 }}>
-              Table {tableId === 1 ? 9 : 10}
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 20 }}>
-              <div>
-                <div style={{ fontSize: 11, color: "#555", letterSpacing: 2, textTransform: "uppercase", marginBottom: 6, textAlign: "left" }}>Player 1</div>
-                <input
-                  value={tempName1}
-                  onChange={e => setTempName1(e.target.value)}
-                  onKeyDown={e => e.key === "Enter" && startGame()}
-                  placeholder="Isem Player 1..."
-                  style={{ width: "100%", padding: "12px 16px", borderRadius: 10, border: "1px solid #2a2a36", background: "#0d0d0f", color: "#fff", fontSize: 14, outline: "none", boxSizing: "border-box" }}
-                />
-              </div>
-              <div>
-                <div style={{ fontSize: 11, color: "#555", letterSpacing: 2, textTransform: "uppercase", marginBottom: 6, textAlign: "left" }}>Player 2</div>
-                <input
-                  value={tempName2}
-                  onChange={e => setTempName2(e.target.value)}
-                  onKeyDown={e => e.key === "Enter" && startGame()}
-                  placeholder="Isem Player 2..."
-                  style={{ width: "100%", padding: "12px 16px", borderRadius: 10, border: "1px solid #2a2a36", background: "#0d0d0f", color: "#fff", fontSize: 14, outline: "none", boxSizing: "border-box" }}
-                />
-              </div>
-            </div>
-            <button
-              onClick={startGame}
-              disabled={!tempName1.trim() || !tempName2.trim()}
-              style={{ width: "100%", padding: 14, borderRadius: 12, border: "1px solid #1a3a1a", background: tempName1.trim() && tempName2.trim() ? "#0a1a0a" : "#17171f", color: tempName1.trim() && tempName2.trim() ? "#1D9E75" : "#444", fontSize: 14, fontWeight: 500, cursor: "pointer", letterSpacing: 1, textTransform: "uppercase" }}>
-              Start 🎱
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Confirm Fin de Frame */}
       {showConfirm && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999 }}>
           <div style={{ background: "#17171f", borderRadius: 16, padding: 32, maxWidth: 340, width: "90%", border: "1px solid #2a2a36", textAlign: "center" }}>
@@ -318,12 +349,11 @@ export default function TablePage({ params }: { params: Promise<{ id: string }> 
         </div>
       )}
 
-      {/* Queue Popup */}
       {showQueue && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999 }}>
           <div style={{ background: "#17171f", borderRadius: 16, padding: 24, maxWidth: 380, width: "90%", border: "1px solid #2a2a36" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <div style={{ fontSize: 13, color: "#aaa", letterSpacing: 2, textTransform: "uppercase" }}>Waiting — Table {tableId === 1 ? 9 : 10}</div>
+              <div style={{ fontSize: 13, color: "#aaa", letterSpacing: 2, textTransform: "uppercase" }}>Waiting — Table {tableLabel}</div>
               <button onClick={() => setShowQueue(false)} style={{ background: "transparent", border: "none", color: "#555", fontSize: 18, cursor: "pointer" }}>✕</button>
             </div>
             <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
@@ -348,7 +378,7 @@ export default function TablePage({ params }: { params: Promise<{ id: string }> 
       )}
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", maxWidth: 900, margin: "0 auto 24px" }}>
-        <h2 style={{ fontSize: 13, letterSpacing: 3, color: "#4a4a5a", textTransform: "uppercase" }}>Table {tableId === 1 ? 9 : 10}</h2>
+        <h2 style={{ fontSize: 13, letterSpacing: 3, color: "#4a4a5a", textTransform: "uppercase" }}>Table {tableLabel}</h2>
         <div style={{ display: "flex", gap: 8 }}>
           <button onClick={() => router.push(`/display/${tableId}`)} style={{ background: "transparent", border: "1px solid #2a2a36", borderRadius: 8, color: "#555", fontSize: 12, cursor: "pointer", padding: "6px 12px" }}>TV Display</button>
           <button onClick={() => setShowQueue(true)} style={{ background: "transparent", border: "1px solid #2a2a36", borderRadius: 8, color: "#555", fontSize: 12, cursor: "pointer", padding: "6px 12px" }}>Queue {queue.length > 0 && `(${queue.length})`}</button>
@@ -358,7 +388,7 @@ export default function TablePage({ params }: { params: Promise<{ id: string }> 
 
       <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) 80px minmax(0,1fr)", gap: 12, alignItems: "center", maxWidth: 900, margin: "0 auto 20px" }}>
         <div onClick={() => switchPlayer(0)} style={{ padding: "20px 12px", borderRadius: 14, textAlign: "center", cursor: "pointer", background: active === 0 ? "#0d1a2e" : "#17171f", border: `2px solid ${active === 0 ? "#378ADD" : "#2a2a36"}` }}>
-          <div style={{ fontSize: 13, fontWeight: 500, letterSpacing: 2, textTransform: "uppercase", color: active === 0 ? "#85B7EB" : "#aaa", marginBottom: 8 }}>{name1 || "Player 1"}</div>
+          <div style={{ fontSize: 13, fontWeight: 500, letterSpacing: 2, textTransform: "uppercase", color: active === 0 ? "#85B7EB" : "#aaa", marginBottom: 8 }}>{name1}</div>
           <div style={{ fontSize: 64, fontWeight: 500, lineHeight: 1, color: "#fff", margin: "8px 0" }}>{scores[0]}</div>
           <div style={{ fontSize: 12, color: "#555", marginTop: 8 }}>Break: <b style={{ color: "#888" }}>{breaks[0]}</b></div>
           <div style={{ fontSize: 11, color: "#444", marginTop: 4 }}>Highest break: <b style={{ color: "#666" }}>{bests[0]}</b></div>
@@ -371,7 +401,7 @@ export default function TablePage({ params }: { params: Promise<{ id: string }> 
         </div>
 
         <div onClick={() => switchPlayer(1)} style={{ padding: "20px 12px", borderRadius: 14, textAlign: "center", cursor: "pointer", background: active === 1 ? "#2a1008" : "#17171f", border: `2px solid ${active === 1 ? "#D85A30" : "#2a2a36"}` }}>
-          <div style={{ fontSize: 13, fontWeight: 500, letterSpacing: 2, textTransform: "uppercase", color: active === 1 ? "#F0997B" : "#aaa", marginBottom: 8 }}>{name2 || "Player 2"}</div>
+          <div style={{ fontSize: 13, fontWeight: 500, letterSpacing: 2, textTransform: "uppercase", color: active === 1 ? "#F0997B" : "#aaa", marginBottom: 8 }}>{name2}</div>
           <div style={{ fontSize: 64, fontWeight: 500, lineHeight: 1, color: "#fff", margin: "8px 0" }}>{scores[1]}</div>
           <div style={{ fontSize: 12, color: "#555", marginTop: 8 }}>Break: <b style={{ color: "#888" }}>{breaks[1]}</b></div>
           <div style={{ fontSize: 11, color: "#444", marginTop: 4 }}>Highest break: <b style={{ color: "#666" }}>{bests[1]}</b></div>
