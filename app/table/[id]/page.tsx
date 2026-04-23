@@ -45,6 +45,7 @@ export default function TablePage({ params }: { params: Promise<{ id: string }> 
   const [name1, setName1] = useState("");
   const [name2, setName2] = useState("");
   const [started, setStarted] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [tempName1, setTempName1] = useState("");
   const [tempName2, setTempName2] = useState("");
   const [history, setHistory] = useState<HistoryEntry[]>([]);
@@ -81,14 +82,13 @@ export default function TablePage({ params }: { params: Promise<{ id: string }> 
           bestsRef.current = [data.best1, data.best2];
           balls1Ref.current = Array.isArray(data.balls1) ? data.balls1 : [];
           balls2Ref.current = Array.isArray(data.balls2) ? data.balls2 : [];
-
-          // Ila smiyat sḥiḥa — started direct
           if (isValidName(data.player1_name || "") && isValidName(data.player2_name || "")) {
             setName1(data.player1_name);
             setName2(data.player2_name);
             setStarted(true);
           }
         }
+        setLoading(false);
       });
     fetchQueue();
     const channel = supabase
@@ -108,27 +108,18 @@ export default function TablePage({ params }: { params: Promise<{ id: string }> 
     if (!isValidName(tempName1) || !isValidName(tempName2)) return;
     const n1 = tempName1.trim().toUpperCase();
     const n2 = tempName2.trim().toUpperCase();
-    setName1(n1);
-    setName2(n2);
+    setName1(n1); setName2(n2);
     setStarted(true);
     const newStart = Date.now();
     timerStartRef.current = newStart;
     setTimerStart(newStart);
-    breaksRef.current = [0, 0];
-    bestsRef.current = [0, 0];
-    balls1Ref.current = [];
-    balls2Ref.current = [];
-    setScores([0, 0]);
-    setBreaks([0, 0]);
-    setBests([0, 0]);
-    setHistory([]);
+    breaksRef.current = [0, 0]; bestsRef.current = [0, 0];
+    balls1Ref.current = []; balls2Ref.current = [];
+    setScores([0, 0]); setBreaks([0, 0]); setBests([0, 0]); setHistory([]);
     await supabase.from("game_state").update({
       player1_name: n1, player2_name: n2,
-      score1: 0, score2: 0,
-      break1: 0, break2: 0,
-      best1: 0, best2: 0,
-      active: 0, balls1: [], balls2: [],
-      timer_start: newStart,
+      score1: 0, score2: 0, break1: 0, break2: 0, best1: 0, best2: 0,
+      active: 0, balls1: [], balls2: [], timer_start: newStart,
       updated_at: new Date().toISOString()
     }).eq("id", tableId);
   };
@@ -148,10 +139,8 @@ export default function TablePage({ params }: { params: Promise<{ id: string }> 
     s: number[], b: number[], bs: number[], a: number, n1: string, n2: string, ts?: number
   ) => {
     await supabase.from("game_state").update({
-      score1: s[0], score2: s[1],
-      break1: b[0], break2: b[1],
-      best1: bs[0], best2: bs[1],
-      active: a, player1_name: n1, player2_name: n2,
+      score1: s[0], score2: s[1], break1: b[0], break2: b[1],
+      best1: bs[0], best2: bs[1], active: a, player1_name: n1, player2_name: n2,
       timer_start: ts !== undefined ? ts : timerStartRef.current,
       balls1: balls1Ref.current, balls2: balls2Ref.current,
       updated_at: new Date().toISOString()
@@ -210,14 +199,9 @@ export default function TablePage({ params }: { params: Promise<{ id: string }> 
   };
 
   const playColorsReset = () => {
-    breaksRef.current = [0, 0];
-    bestsRef.current = [0, 0];
-    balls1Ref.current = [];
-    balls2Ref.current = [];
-    setScores([0, 0]);
-    setBreaks([0, 0]);
-    setBests([0, 0]);
-    setHistory([]);
+    breaksRef.current = [0, 0]; bestsRef.current = [0, 0];
+    balls1Ref.current = []; balls2Ref.current = [];
+    setScores([0, 0]); setBreaks([0, 0]); setBests([0, 0]); setHistory([]);
     syncToSupabase([0, 0], [0, 0], [0, 0], active, name1, name2);
   };
 
@@ -226,14 +210,10 @@ export default function TablePage({ params }: { params: Promise<{ id: string }> 
     const loserIdx = winnerIdx === 0 ? 1 : 0;
 
     await supabase.from("frames").insert({
-      id: Date.now().toString(),
-      table_id: tableId,
-      winner: names[winnerIdx],
-      loser: names[loserIdx],
-      winner_score: scores[winnerIdx],
-      loser_score: scores[loserIdx],
-      date: new Date().toLocaleString("fr-MA"),
-      paid: false,
+      id: Date.now().toString(), table_id: tableId,
+      winner: names[winnerIdx], loser: names[loserIdx],
+      winner_score: scores[winnerIdx], loser_score: scores[loserIdx],
+      date: new Date().toLocaleString("fr-MA"), paid: false,
     });
 
     const { data: freshQueue } = await supabase.from("queue").select("*").eq("table_id", tableId).order("position");
@@ -255,12 +235,11 @@ export default function TablePage({ params }: { params: Promise<{ id: string }> 
     setActiveState(0); setHistory([]);
     setName1(newName1); setName2(newName2); setTimerStart(newStart);
 
-    // Ila loser ytbeddel b queue — show name input ila next player mn queue
-    // Ila ma kaynch queue — show name input bash ydkheloo smiyat jdad
-    if (currentQueue.length === 0) {
+    if (currentQueue.length > 0) {
+      setStarted(true);
+    } else {
       setStarted(false);
-      setTempName1("");
-      setTempName2("");
+      setTempName1(""); setTempName2("");
     }
 
     await supabase.from("game_state").update({
@@ -275,62 +254,50 @@ export default function TablePage({ params }: { params: Promise<{ id: string }> 
   const canStart = isValidName(tempName1) && isValidName(tempName2);
   const tableLabel = tableId === 1 ? 9 : 10;
 
-  if (!tableId) return <div style={{ background: "#0d0d0f", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", color: "#444" }}>Loading...</div>;
-// Name Input Screen
+  if (!tableId || loading) return <div style={{ background: "#0d0d0f", minHeight: "100vh" }} />;
+
   if (!started) {
     return (
       <div style={{
         background: "linear-gradient(135deg, #0a0a0f 0%, #0d1a2e 50%, #0a0f1a 100%)",
         minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
-        fontFamily: "'Segoe UI', sans-serif",
-        position: "relative", overflow: "hidden"
+        fontFamily: "'Segoe UI', sans-serif", position: "relative", overflow: "hidden"
       }}>
-        {/* Background decorative circles */}
         <div style={{ position: "absolute", width: 400, height: 400, borderRadius: "50%", background: "rgba(55,138,221,0.05)", top: -100, right: -100 }} />
         <div style={{ position: "absolute", width: 300, height: 300, borderRadius: "50%", background: "rgba(29,158,117,0.05)", bottom: -80, left: -80 }} />
 
         <div style={{
-          background: "rgba(255,255,255,0.03)",
-          backdropFilter: "blur(20px)",
-          borderRadius: 24, padding: "44px 40px",
-          maxWidth: 420, width: "90%",
-          border: "1px solid rgba(255,255,255,0.08)",
+          background: "rgba(255,255,255,0.03)", borderRadius: 24, padding: "44px 40px",
+          maxWidth: 420, width: "90%", border: "1px solid rgba(255,255,255,0.08)",
           textAlign: "center", position: "relative", zIndex: 1
         }}>
-          {/* Logo */}
           <div style={{ marginBottom: 28 }}>
             <div style={{
               fontSize: "clamp(28px, 5vw, 42px)",
               fontFamily: "'Times New Roman', serif",
-              fontWeight: 900, fontStyle: "italic",
-              letterSpacing: 6,
+              fontWeight: 900, fontStyle: "italic", letterSpacing: 6,
               background: "linear-gradient(180deg, #ffffff 0%, #d4af37 40%, #ffffff 60%, #b8860b 100%)",
               WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-              filter: "drop-shadow(0 0 15px rgba(212,175,55,0.3))",
-              marginBottom: 6
+              filter: "drop-shadow(0 0 15px rgba(212,175,55,0.3))", marginBottom: 10
             }}>
               JET7POOL
             </div>
             <div style={{
-              display: "inline-block",
-              background: "rgba(55,138,221,0.15)",
-              border: "1px solid rgba(55,138,221,0.3)",
-              borderRadius: 20, padding: "4px 16px",
-              fontSize: 12, color: "#85B7EB", letterSpacing: 3, textTransform: "uppercase"
+              display: "inline-block", background: "rgba(55,138,221,0.15)",
+              border: "1px solid rgba(55,138,221,0.3)", borderRadius: 20,
+              padding: "4px 16px", fontSize: 12, color: "#85B7EB", letterSpacing: 3, textTransform: "uppercase"
             }}>
               Table {tableLabel}
             </div>
           </div>
 
-          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", letterSpacing: 2, textTransform: "uppercase", marginBottom: 24 }}>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", letterSpacing: 3, textTransform: "uppercase", marginBottom: 24 }}>
             Enter Players
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 28 }}>
             <div style={{ textAlign: "left" }}>
-              <div style={{ fontSize: 10, color: "rgba(133,183,235,0.6)", letterSpacing: 3, textTransform: "uppercase", marginBottom: 8, paddingLeft: 4 }}>
-                Player 1
-              </div>
+              <div style={{ fontSize: 10, color: "rgba(133,183,235,0.6)", letterSpacing: 3, textTransform: "uppercase", marginBottom: 8, paddingLeft: 4 }}>Player 1</div>
               <input
                 value={tempName1}
                 onChange={e => setTempName1(e.target.value)}
@@ -338,56 +305,38 @@ export default function TablePage({ params }: { params: Promise<{ id: string }> 
                 placeholder="Enter name..."
                 autoFocus
                 style={{
-                  width: "100%", padding: "15px 18px",
-                  borderRadius: 14,
+                  width: "100%", padding: "15px 18px", borderRadius: 14,
                   border: `1.5px solid ${tempName1 && !isValidName(tempName1) ? "rgba(226,75,74,0.5)" : tempName1 && isValidName(tempName1) ? "rgba(29,158,117,0.5)" : "rgba(255,255,255,0.08)"}`,
-                  background: "rgba(255,255,255,0.04)",
-                  color: "#fff", fontSize: 16, fontWeight: 500,
-                  outline: "none", boxSizing: "border-box",
-                  letterSpacing: 1,
-                  transition: "border-color 0.2s"
+                  background: "rgba(255,255,255,0.04)", color: "#fff", fontSize: 16, fontWeight: 500,
+                  outline: "none", boxSizing: "border-box", letterSpacing: 1
                 }}
               />
             </div>
             <div style={{ textAlign: "left" }}>
-              <div style={{ fontSize: 10, color: "rgba(240,153,123,0.6)", letterSpacing: 3, textTransform: "uppercase", marginBottom: 8, paddingLeft: 4 }}>
-                Player 2
-              </div>
+              <div style={{ fontSize: 10, color: "rgba(240,153,123,0.6)", letterSpacing: 3, textTransform: "uppercase", marginBottom: 8, paddingLeft: 4 }}>Player 2</div>
               <input
                 value={tempName2}
                 onChange={e => setTempName2(e.target.value)}
                 onKeyDown={e => e.key === "Enter" && canStart && startGame()}
                 placeholder="Enter name..."
                 style={{
-                  width: "100%", padding: "15px 18px",
-                  borderRadius: 14,
+                  width: "100%", padding: "15px 18px", borderRadius: 14,
                   border: `1.5px solid ${tempName2 && !isValidName(tempName2) ? "rgba(226,75,74,0.5)" : tempName2 && isValidName(tempName2) ? "rgba(29,158,117,0.5)" : "rgba(255,255,255,0.08)"}`,
-                  background: "rgba(255,255,255,0.04)",
-                  color: "#fff", fontSize: 16, fontWeight: 500,
-                  outline: "none", boxSizing: "border-box",
-                  letterSpacing: 1,
-                  transition: "border-color 0.2s"
+                  background: "rgba(255,255,255,0.04)", color: "#fff", fontSize: 16, fontWeight: 500,
+                  outline: "none", boxSizing: "border-box", letterSpacing: 1
                 }}
               />
             </div>
           </div>
 
-          <button
-            onClick={startGame}
-            disabled={!canStart}
-            style={{
-              width: "100%", padding: "16px",
-              borderRadius: 14,
-              border: "none",
-              background: canStart
-                ? "linear-gradient(135deg, #1D9E75 0%, #185FA5 100%)"
-                : "rgba(255,255,255,0.05)",
-              color: canStart ? "#fff" : "rgba(255,255,255,0.2)",
-              fontSize: 15, fontWeight: 600,
-              cursor: canStart ? "pointer" : "default",
-              letterSpacing: 3, textTransform: "uppercase",
-              boxShadow: canStart ? "0 4px 20px rgba(29,158,117,0.3)" : "none",
-            }}>
+          <button onClick={startGame} disabled={!canStart} style={{
+            width: "100%", padding: "16px", borderRadius: 14, border: "none",
+            background: canStart ? "linear-gradient(135deg, #1D9E75 0%, #185FA5 100%)" : "rgba(255,255,255,0.05)",
+            color: canStart ? "#fff" : "rgba(255,255,255,0.2)",
+            fontSize: 15, fontWeight: 600, cursor: canStart ? "pointer" : "default",
+            letterSpacing: 3, textTransform: "uppercase",
+            boxShadow: canStart ? "0 4px 20px rgba(29,158,117,0.3)" : "none",
+          }}>
             Start Game
           </button>
         </div>
@@ -409,7 +358,7 @@ export default function TablePage({ params }: { params: Promise<{ id: string }> 
             <div style={{ fontSize: 12, color: "#444", marginBottom: 20 }}>
               <span style={{ color: "#E24B4A" }}>{names[scores[0] > scores[1] ? 1 : 0]}</span>
               {" "}ytbeddel b{" "}
-              <span style={{ color: "#1D9E75" }}>{queue.length > 0 ? queue[0].name : "—"}</span>
+              <span style={{ color: "#1D9E75" }}>{queue.length > 0 ? queue[0].name : "New Player"}</span>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               <button onClick={() => setShowConfirm(false)} style={{ padding: 12, borderRadius: 10, border: "1px solid #2a2a36", background: "#0d0d0f", color: "#888", fontSize: 13, cursor: "pointer" }}>Cancel</button>
@@ -502,9 +451,7 @@ export default function TablePage({ params }: { params: Promise<{ id: string }> 
       </div>
 
       <div style={{ maxWidth: 900, margin: "0 auto 8px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-        <button onClick={undo} style={{ padding: 13, borderRadius: 10, border: "1px solid #2a2a36", background: "#17171f", color: "#888", fontSize: 13, cursor: "pointer" }}>
-          Undo
-        </button>
+        <button onClick={undo} style={{ padding: 13, borderRadius: 10, border: "1px solid #2a2a36", background: "#17171f", color: "#888", fontSize: 13, cursor: "pointer" }}>Undo</button>
         <button onClick={() => { if (playColors) playColorsReset(); }} style={{
           padding: 13, borderRadius: 10, fontSize: 13, fontWeight: 500,
           cursor: playColors ? "pointer" : "default",
