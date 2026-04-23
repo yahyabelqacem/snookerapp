@@ -15,15 +15,28 @@ type Frame = {
 };
 
 function HistoryContent() {
+  const [unlocked, setUnlocked] = useState(false);
+  const [pin, setPin] = useState("");
+  const [pinError, setPinError] = useState(false);
   const [frames9, setFrames9] = useState<Frame[]>([]);
   const [frames10, setFrames10] = useState<Frame[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "unpaid">("all");
   const router = useRouter();
 
+  const checkPin = () => {
+    if (pin === "2026") {
+      setUnlocked(true);
+      setPinError(false);
+    } else {
+      setPinError(true);
+      setPin("");
+    }
+  };
+
   useEffect(() => {
-    fetchFrames();
-  }, []);
+    if (unlocked) fetchFrames();
+  }, [unlocked]);
 
   const fetchFrames = async () => {
     setLoading(true);
@@ -51,6 +64,43 @@ function HistoryContent() {
 
   const allFrames = [...frames9, ...frames10];
   const unpaidCount = allFrames.filter(f => !f.paid).length;
+
+  // PIN Screen
+  if (!unlocked) {
+    return (
+      <div style={{ background: "#0d0d0f", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "sans-serif" }}>
+        <div style={{ background: "#17171f", borderRadius: 20, padding: 40, maxWidth: 320, width: "90%", border: "1px solid #2a2a36", textAlign: "center" }}>
+          <div style={{ fontSize: 32, marginBottom: 8 }}>🔒</div>
+          <div style={{ fontSize: 14, color: "#aaa", letterSpacing: 2, textTransform: "uppercase", marginBottom: 24 }}>
+            Enter PIN
+          </div>
+          <input
+            type="password"
+            inputMode="numeric"
+            maxLength={4}
+            value={pin}
+            onChange={e => { setPin(e.target.value); setPinError(false); }}
+            onKeyDown={e => e.key === "Enter" && checkPin()}
+            placeholder="••••"
+            style={{
+              width: "100%", padding: "14px 20px", borderRadius: 12,
+              border: `1px solid ${pinError ? "#E24B4A" : "#2a2a36"}`,
+              background: "#0d0d0f", color: "#fff", fontSize: 24,
+              textAlign: "center", letterSpacing: 8, outline: "none",
+              boxSizing: "border-box"
+            }}
+          />
+          {pinError && (
+            <div style={{ fontSize: 12, color: "#E24B4A", marginTop: 8 }}>PIN ghalat ❌</div>
+          )}
+          <button onClick={checkPin}
+            style={{ marginTop: 16, width: "100%", padding: 14, borderRadius: 12, border: "1px solid #1a3a1a", background: "#0a1a0a", color: "#1D9E75", fontSize: 14, fontWeight: 500, cursor: "pointer", letterSpacing: 1 }}>
+            Confirm
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const FrameCard = ({ frame }: { frame: Frame }) => (
     <div style={{
@@ -99,7 +149,6 @@ function HistoryContent() {
 
   return (
     <div style={{ background: "#0d0d0f", minHeight: "100vh", padding: "28px 24px", fontFamily: "sans-serif" }}>
-
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", maxWidth: 700, margin: "0 auto 24px" }}>
         <div>
           <h2 style={{ fontSize: 13, letterSpacing: 3, color: "#4a4a5a", textTransform: "uppercase", margin: 0 }}>History</h2>
