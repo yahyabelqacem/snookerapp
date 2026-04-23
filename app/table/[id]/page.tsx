@@ -170,7 +170,6 @@ export default function TablePage({ params }: { params: Promise<{ id: string }> 
     const winnerIdx = scores[0] > scores[1] ? 0 : 1;
     const loserIdx = winnerIdx === 0 ? 1 : 0;
 
-    // Save f Supabase machi localStorage
     await supabase.from("frames").insert({
       id: Date.now().toString(),
       table_id: tableId,
@@ -208,7 +207,7 @@ export default function TablePage({ params }: { params: Promise<{ id: string }> 
   };
 
   const diff = Math.abs(scores[0] - scores[1]);
-  const leader = scores[0] === scores[1] ? null : scores[0] > scores[1] ? 0 : 1;
+  const playColors = diff < 7;
 
   if (!tableId) return <div style={{ background: "#0d0d0f", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", color: "#444" }}>Loading...</div>;
 
@@ -285,7 +284,7 @@ export default function TablePage({ params }: { params: Promise<{ id: string }> 
         <div style={{ textAlign: "center" }}>
           <div style={{ fontSize: 9, color: "#333", textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>diff</div>
           <div style={{ fontSize: 28, fontWeight: 500, color: "#fff" }}>{diff}</div>
-          <div style={{ fontSize: 9, color: "#444", marginTop: 4 }}>{leader === null ? "equal" : `${names[leader]} leads`}</div>
+          <div style={{ fontSize: 9, color: "#444", marginTop: 4 }}>{diff === 0 ? "equal" : `${names[scores[0] > scores[1] ? 0 : 1]} leads`}</div>
         </div>
 
         <div onClick={() => switchPlayer(1)} style={{ padding: "20px 12px", borderRadius: 14, textAlign: "center", cursor: "pointer", background: active === 1 ? "#2a1008" : "#17171f", border: `2px solid ${active === 1 ? "#D85A30" : "#2a2a36"}` }}>
@@ -320,10 +319,22 @@ export default function TablePage({ params }: { params: Promise<{ id: string }> 
         </div>
       </div>
 
-      <div style={{ maxWidth: 900, margin: "0 auto 8px" }}>
-        <button onClick={undo} style={{ width: "100%", padding: 13, borderRadius: 10, border: "1px solid #2a2a36", background: "#17171f", color: "#888", fontSize: 13, cursor: "pointer" }}>Undo</button>
+      {/* Undo + Play Colors */}
+      <div style={{ maxWidth: 900, margin: "0 auto 8px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+        <button onClick={undo} style={{ padding: 13, borderRadius: 10, border: "1px solid #2a2a36", background: "#17171f", color: "#888", fontSize: 13, cursor: "pointer" }}>
+          Undo
+        </button>
+        <button style={{
+          padding: 13, borderRadius: 10, fontSize: 13, fontWeight: 500, cursor: "pointer",
+          border: `1px solid ${playColors ? "#1a3a1a" : "#3a1a1a"}`,
+          background: playColors ? "#0a1a0a" : "#1a0808",
+          color: playColors ? "#1D9E75" : "#E24B4A",
+        }}>
+          {playColors ? "✅ Play Colors" : "❌ Frame Over"}
+        </button>
       </div>
 
+      {/* Fin de Frame */}
       <div style={{ maxWidth: 900, margin: "0 auto" }}>
         <button onClick={() => { if (scores[0] !== scores[1]) setShowConfirm(true); }}
           style={{ width: "100%", padding: 14, borderRadius: 10, border: `1px solid ${scores[0] !== scores[1] ? "#1a3a1a" : "#2a2a36"}`, background: scores[0] !== scores[1] ? "#0a1a0a" : "#17171f", color: scores[0] !== scores[1] ? "#1D9E75" : "#444", fontSize: 14, fontWeight: 500, cursor: "pointer", letterSpacing: 1, textTransform: "uppercase" }}>
