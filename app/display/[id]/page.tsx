@@ -164,7 +164,7 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", padding: "32px 56px" }}>
 
         {/* Header */}
-        <div style={{ textAlign: "center", marginBottom:140}}>
+        <div style={{ textAlign: "center", marginBottom:150}}>
           <div style={{
             fontSize: "clamp(60px, 9vw, 130px)",
             fontFamily: "'Times New Roman', serif",
