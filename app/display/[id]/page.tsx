@@ -48,6 +48,7 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
 
   const [queue, setQueue] = useState<QueueEntry[]>([]);
   const [elapsed, setElapsed] = useState("00:00");
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const pollRef = useRef<NodeJS.Timeout | null>(null);
   const gameRef = useRef(game);
@@ -55,6 +56,25 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
 
   useEffect(() => {
     params.then(p => setTableId(parseInt(p.id)));
+  }, []);
+
+  // Auto fullscreen on click
+  useEffect(() => {
+    const goFullscreen = () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen?.();
+        setIsFullscreen(true);
+      }
+    };
+    document.addEventListener("click", goFullscreen, { once: true });
+    return () => document.removeEventListener("click", goFullscreen);
+  }, []);
+
+  // Track fullscreen change
+  useEffect(() => {
+    const onChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
   }, []);
 
   const fetchAll = async (tid: number) => {
@@ -126,12 +146,24 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
     <div style={{
       background: `linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('/bg.jpg') center/cover no-repeat fixed`,
       minHeight: "100vh", display: "flex", flexDirection: "column",
-      fontFamily: "'Segoe UI', sans-serif", overflow: "hidden"
+      fontFamily: "'Segoe UI', sans-serif", overflow: "hidden",
+      cursor: isFullscreen ? "none" : "default",
     }}>
+
+      {/* Click to fullscreen hint */}
+      {!isFullscreen && (
+        <div style={{
+          position: "fixed", bottom: 20, right: 20, zIndex: 100,
+          background: "rgba(0,0,0,0.6)", borderRadius: 10, padding: "8px 14px",
+          fontSize: 11, color: "#555", letterSpacing: 1, border: "1px solid #2a2a36"
+        }}>
+          Click anywhere for fullscreen
+        </div>
+      )}
 
       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", padding: "32px 56px" }}>
 
-        {/* Header — gha JET7POOL */}
+        {/* Header */}
         <div style={{ textAlign: "center", marginBottom: 16 }}>
           <div style={{
             fontSize: "clamp(50px, 7vw, 100px)",
