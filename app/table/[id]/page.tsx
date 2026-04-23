@@ -166,6 +166,18 @@ export default function TablePage({ params }: { params: Promise<{ id: string }> 
     }
   };
 
+  const playColorsReset = () => {
+    breaksRef.current = [0, 0];
+    bestsRef.current = [0, 0];
+    balls1Ref.current = [];
+    balls2Ref.current = [];
+    setScores([0, 0]);
+    setBreaks([0, 0]);
+    setBests([0, 0]);
+    setHistory([]);
+    syncToSupabase([0, 0], [0, 0], [0, 0], active, name1, name2);
+  };
+
   const confirmFinDeFrame = async () => {
     const winnerIdx = scores[0] > scores[1] ? 0 : 1;
     const loserIdx = winnerIdx === 0 ? 1 : 0;
@@ -324,8 +336,9 @@ export default function TablePage({ params }: { params: Promise<{ id: string }> 
         <button onClick={undo} style={{ padding: 13, borderRadius: 10, border: "1px solid #2a2a36", background: "#17171f", color: "#888", fontSize: 13, cursor: "pointer" }}>
           Undo
         </button>
-        <button style={{
-          padding: 13, borderRadius: 10, fontSize: 13, fontWeight: 500, cursor: "pointer",
+        <button onClick={() => { if (playColors) playColorsReset(); }} style={{
+          padding: 13, borderRadius: 10, fontSize: 13, fontWeight: 500,
+          cursor: playColors ? "pointer" : "default",
           border: `1px solid ${playColors ? "#1a3a1a" : "#3a1a1a"}`,
           background: playColors ? "#0a1a0a" : "#1a0808",
           color: playColors ? "#1D9E75" : "#E24B4A",
