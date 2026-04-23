@@ -95,16 +95,10 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
 
   const BallsRow = ({ balls }: { balls: { color: string }[] }) => (
     <div style={{
-      display: "flex",
-      gap: 6,
-      marginBottom: 12,
-      overflowX: "auto",
-      overflowY: "hidden",
-      maxWidth: "100%",
-      padding: "4px 2px",
-      scrollbarWidth: "none",
-      msOverflowStyle: "none",
-      flexWrap: "nowrap",
+      display: "flex", gap: 6, marginBottom: 12,
+      overflowX: "auto", overflowY: "hidden",
+      maxWidth: "100%", padding: "4px 2px",
+      scrollbarWidth: "none", flexWrap: "nowrap",
     }}>
       {balls.map((b, i) => {
         const c = getRealColor(b.color);
@@ -113,7 +107,7 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
             width: 28, height: 28, borderRadius: "50%",
             background: `radial-gradient(circle at 35% 35%, white 2%, ${c}ff 40%, ${c}88 100%)`,
             border: "2px solid rgba(255,255,255,0.5)",
-            boxShadow: `0 0 10px ${c}cc, 0 2px 6px rgba(0,0,0,0.5)`,
+            boxShadow: `0 0 10px ${c}cc`,
             filter: "brightness(1.2) saturate(1.3)",
             flexShrink: 0
           }} />
@@ -135,12 +129,10 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
       fontFamily: "'Segoe UI', sans-serif", overflow: "hidden"
     }}>
 
-      {/* Main content */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", padding: "32px 56px" }}>
 
-        {/* Header */}
-        <div style={{ textAlign: "center", marginBottom: 24 }}>
-          
+        {/* Header — gha JET7POOL */}
+        <div style={{ textAlign: "center", marginBottom: 16 }}>
           <div style={{
             fontSize: "clamp(50px, 7vw, 100px)",
             fontFamily: "'Times New Roman', serif",
@@ -152,7 +144,7 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
           }}>
             JET7POOL
           </div>
-          <div style={{ fontSize: 11, color: "#444", letterSpacing: 4, textTransform: "uppercase", marginTop: 6 }}>
+          <div style={{ fontSize: 11, color: "#444", letterSpacing: 4, textTransform: "uppercase", marginTop: 4 }}>
             Table {tableId}
           </div>
         </div>
@@ -160,7 +152,6 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
         {/* Scoreboard */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 110px 1fr", gap: 20, alignItems: "center", marginBottom: 20 }}>
 
-          {/* Player 1 */}
           <div style={{
             padding: "28px 28px", borderRadius: 20, textAlign: "center",
             background: game.active === 0 ? "linear-gradient(145deg, rgba(13,26,46,0.95), rgba(20,40,70,0.9))" : "rgba(15,15,20,0.7)",
@@ -183,7 +174,6 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
             </div>
           </div>
 
-          {/* Center */}
           <div style={{ textAlign: "center" }}>
             <div style={{ fontSize: 10, color: "#333", textTransform: "uppercase", letterSpacing: 2, marginBottom: 8 }}>diff</div>
             <div style={{ fontSize: 72, fontWeight: 900, color: diff > 0 ? "#fff" : "#333", lineHeight: 1, marginBottom: 8 }}>
@@ -193,7 +183,6 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
             <div style={{ fontSize: 10, color: "#333", marginTop: 2 }}>{leader !== null ? "leads" : ""}</div>
           </div>
 
-          {/* Player 2 */}
           <div style={{
             padding: "28px 28px", borderRadius: 20, textAlign: "center",
             background: game.active === 1 ? "linear-gradient(145deg, rgba(42,16,8,0.95), rgba(60,20,10,0.9))" : "rgba(15,15,20,0.7)",
