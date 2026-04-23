@@ -82,7 +82,7 @@ export default function TablePage({ params }: { params: Promise<{ id: string }> 
           bestsRef.current = [data.best1, data.best2];
           balls1Ref.current = Array.isArray(data.balls1) ? data.balls1 : [];
           balls2Ref.current = Array.isArray(data.balls2) ? data.balls2 : [];
-          if (isValidName(data.player1_name || "") && isValidName(data.player2_name || "")) {
+          if (data.game_started && isValidName(data.player1_name || "") && isValidName(data.player2_name || "")) {
             setName1(data.player1_name);
             setName2(data.player2_name);
             setStarted(true);
@@ -120,6 +120,7 @@ export default function TablePage({ params }: { params: Promise<{ id: string }> 
       player1_name: n1, player2_name: n2,
       score1: 0, score2: 0, break1: 0, break2: 0, best1: 0, best2: 0,
       active: 0, balls1: [], balls2: [], timer_start: newStart,
+      game_started: true,
       updated_at: new Date().toISOString()
     }).eq("id", tableId);
   };
@@ -231,11 +232,13 @@ export default function TablePage({ params }: { params: Promise<{ id: string }> 
     balls1Ref.current = []; balls2Ref.current = [];
     timerStartRef.current = newStart;
 
+    const gameStarted = currentQueue.length > 0;
+
     setShowConfirm(false); setScores([0, 0]); setBreaks([0, 0]); setBests([0, 0]);
     setActiveState(0); setHistory([]);
     setName1(newName1); setName2(newName2); setTimerStart(newStart);
 
-    if (currentQueue.length > 0) {
+    if (gameStarted) {
       setStarted(true);
     } else {
       setStarted(false);
@@ -245,7 +248,9 @@ export default function TablePage({ params }: { params: Promise<{ id: string }> 
     await supabase.from("game_state").update({
       score1: 0, score2: 0, break1: 0, break2: 0, best1: 0, best2: 0,
       active: 0, player1_name: newName1, player2_name: newName2,
-      timer_start: newStart, balls1: [], balls2: [], updated_at: new Date().toISOString()
+      timer_start: newStart, balls1: [], balls2: [],
+      game_started: gameStarted,
+      updated_at: new Date().toISOString()
     }).eq("id", tableId);
   };
 
