@@ -164,9 +164,9 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", padding: "32px 56px" }}>
 
         {/* Header */}
-        <div style={{ textAlign: "center", marginBottom: 16 }}>
+        <div style={{ textAlign: "center", marginBottom: 8 }}>
           <div style={{
-            fontSize: "clamp(50px, 7vw, 100px)",
+            fontSize: "clamp(60px, 9vw, 130px)",
             fontFamily: "'Times New Roman', serif",
             fontWeight: 900, fontStyle: "italic", letterSpacing: 10, lineHeight: 1,
             background: "linear-gradient(180deg, #ffffff 0%, #d4af37 40%, #ffffff 60%, #b8860b 100%)",
