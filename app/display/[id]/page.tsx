@@ -72,21 +72,30 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
   }, []);
 
   const fetchAll = async (tid: number) => {
-    const { data: g } = await supabase.from("game_state").select("*").eq("id", tid).single();
+    const ts = Date.now();
+    const { data: g } = await supabase
+      .from("game_state")
+      .select("*")
+      .eq("id", tid)
+      .single();
     if (g) setGame({
       ...g,
       balls1: Array.isArray(g.balls1) ? g.balls1 : [],
       balls2: Array.isArray(g.balls2) ? g.balls2 : [],
       game_started: g.game_started || false,
     });
-    const { data: q } = await supabase.from("queue").select("*").eq("table_id", tid).order("position");
+    const { data: q } = await supabase
+      .from("queue")
+      .select("*")
+      .eq("table_id", tid)
+      .order("position");
     if (q) setQueue(q);
   };
 
   useEffect(() => {
     if (!tableId) return;
     fetchAll(tableId);
-    pollRef.current = setInterval(() => fetchAll(tableId), 2000);
+    pollRef.current = setInterval(() => fetchAll(tableId), 1000);
     return () => { if (pollRef.current) clearInterval(pollRef.current); };
   }, [tableId]);
 
@@ -131,7 +140,6 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
 
   if (!tableId) return <div style={{ background: "#0d0d0f", minHeight: "100vh" }} />;
 
-  // Waiting screen
   if (!game.game_started) {
     return (
       <div style={{
@@ -141,7 +149,6 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
       }}>
         <style>{`
           @keyframes spin { to { transform: rotate(360deg); } }
-          @keyframes pulse { 0%,100% { opacity:0.3; } 50% { opacity:1; } }
         `}</style>
         <div style={{ textAlign: "center" }}>
           <div style={{
@@ -165,7 +172,6 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
           }}>
             Table {tableId}
           </div>
-
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
             <div style={{
               width: 56, height: 56, borderRadius: "50%",
@@ -177,12 +183,9 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
               Waiting for players
             </div>
           </div>
-
           {queue.length > 0 && (
             <div style={{ marginTop: 48, display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-              <div style={{ width: "100%", fontSize: 10, color: "#333", letterSpacing: 4, textTransform: "uppercase", marginBottom: 12 }}>
-                In queue
-              </div>
+              <div style={{ width: "100%", fontSize: 10, color: "#333", letterSpacing: 4, textTransform: "uppercase", marginBottom: 12 }}>In queue</div>
               {queue.map((q, idx) => (
                 <div key={q.id} style={{
                   display: "flex", alignItems: "center", gap: 10,
@@ -190,15 +193,8 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
                   background: idx === 0 ? "rgba(29,158,117,0.12)" : "rgba(255,255,255,0.03)",
                   border: `1px solid ${idx === 0 ? "rgba(29,158,117,0.4)" : "rgba(255,255,255,0.06)"}`,
                 }}>
-                  <div style={{
-                    width: 24, height: 24, borderRadius: "50%",
-                    background: idx === 0 ? "#1D9E75" : "#1a1a1a",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 11, fontWeight: 600, color: "#fff"
-                  }}>{idx + 1}</div>
-                  <span style={{ fontSize: 14, color: idx === 0 ? "#1D9E75" : "#444", textTransform: "uppercase", letterSpacing: 2 }}>
-                    {q.name}
-                  </span>
+                  <div style={{ width: 24, height: 24, borderRadius: "50%", background: idx === 0 ? "#1D9E75" : "#1a1a1a", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 600, color: "#fff" }}>{idx + 1}</div>
+                  <span style={{ fontSize: 14, color: idx === 0 ? "#1D9E75" : "#444", textTransform: "uppercase", letterSpacing: 2 }}>{q.name}</span>
                 </div>
               ))}
             </div>
@@ -222,7 +218,7 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
         </div>
       )}
 
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", padding: "32px 56px" }}>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", padding: "20px 56px" }}>
 
         <div style={{ textAlign: "center", marginBottom: 16 }}>
           <div style={{
@@ -254,7 +250,7 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
               {game.player1_name}
             </div>
             {balls1.length > 0 && <BallsRow balls={balls1} />}
-            <div style={{ fontSize: "clamp(90px, 12vw, 160px)", fontWeight: 700, lineHeight: 1, color: "#fff", margin: "0 0 16px", textShadow: game.active === 0 ? "0 0 50px rgba(55,138,221,0.5)" : "none" }}>
+            <div style={{ fontSize: "clamp(70px, 10vw, 130px)", fontWeight: 700, lineHeight: 1, color: "#fff", margin: "0 0 16px", textShadow: game.active === 0 ? "0 0 50px rgba(55,138,221,0.5)" : "none" }}>
               {game.score1}
             </div>
             <div style={{ fontSize: 16, color: "#555", marginBottom: 4 }}>
@@ -283,7 +279,7 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
               {game.player2_name}
             </div>
             {balls2.length > 0 && <BallsRow balls={balls2} />}
-            <div style={{ fontSize: "clamp(90px, 12vw, 160px)", fontWeight: 700, lineHeight: 1, color: "#fff", margin: "0 0 16px", textShadow: game.active === 1 ? "0 0 50px rgba(216,90,48,0.5)" : "none" }}>
+            <div style={{ fontSize: "clamp(70px, 10vw, 130px)", fontWeight: 700, lineHeight: 1, color: "#fff", margin: "0 0 16px", textShadow: game.active === 1 ? "0 0 50px rgba(216,90,48,0.5)" : "none" }}>
               {game.score2}
             </div>
             <div style={{ fontSize: 16, color: "#555", marginBottom: 4 }}>
@@ -311,7 +307,7 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
       </div>
 
       {queue.length > 0 && (
-        <div style={{ padding: "14px 56px", background: "rgba(0,0,0,0.6)", borderTop: "1px solid rgba(255,255,255,0.05)", display: "flex", alignItems: "center", gap: 16, flexWrap: "nowrap", overflowX: "auto" }}>
+        <div style={{ padding: "20px 56px", background: "rgba(0,0,0,0.6)", borderTop: "1px solid rgba(255,255,255,0.05)", display: "flex", alignItems: "center", gap: 16, flexWrap: "nowrap", overflowX: "auto" }}>
           <div style={{ fontSize: 9, letterSpacing: 4, color: "#444", textTransform: "uppercase", flexShrink: 0 }}>Waiting:</div>
           {queue.map((q, idx) => (
             <div key={q.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 14px", borderRadius: 20, background: idx === 0 ? "rgba(29,158,117,0.15)" : "rgba(255,255,255,0.03)", border: `1px solid ${idx === 0 ? "rgba(29,158,117,0.4)" : "rgba(255,255,255,0.06)"}`, flexShrink: 0 }}>
