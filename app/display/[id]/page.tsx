@@ -15,6 +15,9 @@ type GameState = {
   timer_start: number;
   balls1: { color: string }[];
   balls2: { color: string }[];
+  fouls1: number[];
+  fouls2: number[];
+  game_started: boolean;
 };
 
 type QueueEntry = {
@@ -37,9 +40,10 @@ const BALL_COLORS: Record<string, string> = {
 export default function DisplayPage({ params }: { params: Promise<{ id: string }> }) {
   const [tableId, setTableId] = useState(0);
   const [game, setGame] = useState<GameState>({
-    player1_name: "Player 1", player2_name: "Player 2",
+    player1_name: "", player2_name: "",
     score1: 0, score2: 0, break1: 0, break2: 0, best1: 0, best2: 0,
-    active: 0, timer_start: 0, balls1: [], balls2: [],
+    active: 0, timer_start: 0, balls1: [], balls2: [], fouls1: [], fouls2: [],
+    game_started: false,
   });
   const [queue, setQueue] = useState<QueueEntry[]>([]);
   const [elapsed, setElapsed] = useState("00:00");
@@ -71,21 +75,16 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
   }, []);
 
   const fetchAll = async (tid: number) => {
-    const { data: g } = await supabase
-      .from("game_state")
-      .select("*")
-      .eq("id", tid)
-      .single();
+    const { data: g } = await supabase.from("game_state").select("*").eq("id", tid).single();
     if (g) setGame({
       ...g,
       balls1: Array.isArray(g.balls1) ? g.balls1 : [],
       balls2: Array.isArray(g.balls2) ? g.balls2 : [],
+      fouls1: Array.isArray(g.fouls1) ? g.fouls1 : [],
+      fouls2: Array.isArray(g.fouls2) ? g.fouls2 : [],
+      game_started: g.game_started ?? false,
     });
-    const { data: q } = await supabase
-      .from("queue")
-      .select("*")
-      .eq("table_id", tid)
-      .order("position");
+    const { data: q } = await supabase.from("queue").select("*").eq("table_id", tid).order("position");
     if (q) setQueue(q);
   };
 
@@ -115,15 +114,17 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
   const names = [game.player1_name, game.player2_name];
   const balls1 = Array.isArray(game.balls1) ? game.balls1 : [];
   const balls2 = Array.isArray(game.balls2) ? game.balls2 : [];
+  const fouls1 = Array.isArray(game.fouls1) ? game.fouls1 : [];
+  const fouls2 = Array.isArray(game.fouls2) ? game.fouls2 : [];
   const getRealColor = (color: string) => BALL_COLORS[color] || color;
-  const scoreSize = tableId === 9 ? "clamp(55px, 8vw, 100px)" : "clamp(70px, 10vw, 130px)";
-  const cardPadding = tableId === 9 ? "18px 18px" : "28px 28px";
-  const nameFontSize = tableId === 9 ? 16 : 20;
-  const breakFontSize = tableId === 9 ? 16 : 20;
-  const mainPadding = tableId === 9 ? "16px 40px" : "20px 56px";
+  const scoreSize = "clamp(70px, 10vw, 130px)";
+  const cardPadding = "28px 28px";
+  const nameFontSize = 20;
+  const breakFontSize = 20;
+  const mainPadding = "20px 56px";
 
   const BallsRow = ({ balls }: { balls: { color: string }[] }) => (
-    <div style={{ display: "flex", gap: 6, marginBottom: 10, overflowX: "auto", overflowY: "hidden", maxWidth: "100%", padding: "4px 2px", scrollbarWidth: "none", flexWrap: "nowrap" }}>
+    <div style={{ display: "flex", gap: 6, marginBottom: 10, overflowX: "auto", maxWidth: "100%", padding: "4px 2px", scrollbarWidth: "none", flexWrap: "nowrap" }}>
       {balls.map((b, i) => {
         const c = getRealColor(b.color);
         return (
@@ -140,7 +141,70 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
     </div>
   );
 
+  const FoulsRow = ({ fouls }: { fouls: number[] }) => {
+    if (fouls.length === 0) return null;
+    return (
+      <div style={{ marginTop: 8 }}>
+        <div style={{ height: 1, background: "rgba(255,255,255,0.06)", marginBottom: 8 }} />
+        <div style={{ fontSize: 9, color: "#552222", letterSpacing: 2, textTransform: "uppercase", marginBottom: 5 }}>
+          Fouls: {fouls.length}
+        </div>
+        <div style={{ display: "flex", gap: 4, overflowX: "auto", scrollbarWidth: "none", flexWrap: "nowrap", justifyContent: "center" }}>
+          {fouls.map((f, i) => (
+            <span key={i} style={{ fontSize: 10, color: "#E24B4A", background: "rgba(226,75,74,0.1)", border: "1px solid rgba(226,75,74,0.25)", borderRadius: 5, padding: "2px 6px", flexShrink: 0 }}>
+              +{f}
+            </span>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   if (!tableId) return <div style={{ background: "#0d0d0f", minHeight: "100vh" }} />;
+
+  // Waiting for players screen
+  if (!game.game_started) {
+    return (
+      <div style={{
+        background: `linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), url('/bg.jpg') center/cover no-repeat fixed`,
+        minHeight: "100vh", display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center",
+        fontFamily: "'Segoe UI', sans-serif",
+      }}>
+        <div style={{
+          fontSize: "clamp(40px, 6vw, 90px)",
+          fontFamily: "'Times New Roman', serif",
+          fontWeight: 900, fontStyle: "italic", letterSpacing: 10,
+          background: "linear-gradient(180deg, #ffffff 0%, #d4af37 40%, #ffffff 60%, #b8860b 100%)",
+          WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+          filter: "drop-shadow(0 0 20px rgba(212,175,55,0.4))",
+          marginBottom: 16,
+        }}>
+          JET7POOL
+        </div>
+        <div style={{ fontSize: 12, color: "#444", letterSpacing: 4, textTransform: "uppercase", marginBottom: 40 }}>
+          Table {tableId}
+        </div>
+        <div style={{
+          fontSize: 22, color: "#555", letterSpacing: 3, textTransform: "uppercase",
+          border: "1px solid #2a2a36", borderRadius: 16, padding: "20px 40px",
+          background: "rgba(255,255,255,0.02)",
+        }}>
+          ⏳ Waiting for players...
+        </div>
+        {queue.length > 0 && (
+          <div style={{ marginTop: 30, display: "flex", flexDirection: "column", gap: 10, alignItems: "center" }}>
+            <div style={{ fontSize: 10, color: "#333", letterSpacing: 4, textTransform: "uppercase", marginBottom: 8 }}>Next up</div>
+            {queue.slice(0, 3).map((q, idx) => (
+              <div key={q.id} style={{ fontSize: 16, color: idx === 0 ? "#1D9E75" : "#444", letterSpacing: 2, textTransform: "uppercase" }}>
+                {idx + 1}. {q.name}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div style={{
@@ -175,14 +239,13 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
           </div>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 90px 1fr", gap: 16, alignItems: "center", marginBottom: 16 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 90px 1fr", gap: 16, alignItems: "start", marginBottom: 16 }}>
 
           <div style={{
             padding: cardPadding, borderRadius: 20, textAlign: "center",
             background: game.active === 0 ? "linear-gradient(145deg, rgba(13,26,46,0.95), rgba(20,40,70,0.9))" : "rgba(15,15,20,0.7)",
             border: `2px solid ${game.active === 0 ? "#378ADD" : "rgba(255,255,255,0.05)"}`,
             boxShadow: game.active === 0 ? "0 0 40px rgba(55,138,221,0.25)" : "none",
-            overflow: "hidden",
           }}>
             <div style={{ fontSize: nameFontSize, letterSpacing: 4, color: game.active === 0 ? "#85B7EB" : "#444", textTransform: "uppercase", marginBottom: 10, fontWeight: 600 }}>
               {game.player1_name}
@@ -197,9 +260,10 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
             <div style={{ fontSize: 12, color: "#333" }}>
               Best <span style={{ color: "#555", fontSize: 13 }}>{game.best1}</span>
             </div>
+            <FoulsRow fouls={fouls1} />
           </div>
 
-          <div style={{ textAlign: "center" }}>
+          <div style={{ textAlign: "center", paddingTop: 40 }}>
             <div style={{ fontSize: 9, color: "#333", textTransform: "uppercase", letterSpacing: 2, marginBottom: 6 }}>diff</div>
             <div style={{ fontSize: 56, fontWeight: 900, color: diff > 0 ? "#fff" : "#333", lineHeight: 1, marginBottom: 6 }}>{diff}</div>
             <div style={{ fontSize: 10, color: "#444", letterSpacing: 1 }}>{leader === null ? "equal" : `${names[leader]}`}</div>
@@ -211,7 +275,6 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
             background: game.active === 1 ? "linear-gradient(145deg, rgba(42,16,8,0.95), rgba(60,20,10,0.9))" : "rgba(15,15,20,0.7)",
             border: `2px solid ${game.active === 1 ? "#D85A30" : "rgba(255,255,255,0.05)"}`,
             boxShadow: game.active === 1 ? "0 0 40px rgba(216,90,48,0.25)" : "none",
-            overflow: "hidden",
           }}>
             <div style={{ fontSize: nameFontSize, letterSpacing: 4, color: game.active === 1 ? "#F0997B" : "#444", textTransform: "uppercase", marginBottom: 10, fontWeight: 600 }}>
               {game.player2_name}
@@ -226,6 +289,7 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
             <div style={{ fontSize: 12, color: "#333" }}>
               Best <span style={{ color: "#555", fontSize: 13 }}>{game.best2}</span>
             </div>
+            <FoulsRow fouls={fouls2} />
           </div>
 
         </div>
