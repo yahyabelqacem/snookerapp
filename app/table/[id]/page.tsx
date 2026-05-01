@@ -134,7 +134,7 @@ export default function TablePage({ params }: { params: Promise<{ id: string }> 
       player1_name: n1, player2_name: n2,
       score1: 0, score2: 0, break1: 0, break2: 0, best1: 0, best2: 0,
       active: 0, balls1: [], balls2: [], timer_start: newStart,
-      game_started: currentQueue.length > 0, fouls1: [], fouls2: [],
+      game_started: true, fouls1: [], fouls2: [],
       updated_at: new Date().toISOString()
     }).eq("id", tableId);
   };
