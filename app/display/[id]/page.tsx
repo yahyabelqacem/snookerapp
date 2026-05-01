@@ -48,6 +48,7 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
   const [queue, setQueue] = useState<QueueEntry[]>([]);
   const [elapsed, setElapsed] = useState("00:00");
   const [isFullscreen, setIsFullscreen] = useState(false);
+const [dataLoaded, setDataLoaded] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const pollRef = useRef<NodeJS.Timeout | null>(null);
   const gameRef = useRef(game);
@@ -86,6 +87,8 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
     });
     const { data: q } = await supabase.from("queue").select("*").eq("table_id", tid).order("position");
     if (q) setQueue(q);
+    setDataLoaded(true);
+    setDataLoaded(true);
   };
 
   useEffect(() => {
@@ -160,7 +163,7 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
     );
   };
 
-  if (!tableId) return <div style={{ background: "#0d0d0f", minHeight: "100vh" }} />;
+  if (!tableId || !dataLoaded) return <div style={{ background: "#0d0d0f", minHeight: "100vh" }} />;
 
   // Waiting screen
   if (!game.game_started) {
