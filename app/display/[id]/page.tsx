@@ -17,6 +17,7 @@ type GameState = {
   balls2: { color: string }[];
   fouls1: number[];
   fouls2: number[];
+  game_started: boolean;
 };
 
 type QueueEntry = {
@@ -42,6 +43,7 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
     player1_name: "Player 1", player2_name: "Player 2",
     score1: 0, score2: 0, break1: 0, break2: 0, best1: 0, best2: 0,
     active: 0, timer_start: 0, balls1: [], balls2: [], fouls1: [], fouls2: [],
+    game_started: false,
   });
   const [queue, setQueue] = useState<QueueEntry[]>([]);
   const [elapsed, setElapsed] = useState("00:00");
@@ -80,6 +82,7 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
       balls2: Array.isArray(g.balls2) ? g.balls2 : [],
       fouls1: Array.isArray(g.fouls1) ? g.fouls1 : [],
       fouls2: Array.isArray(g.fouls2) ? g.fouls2 : [],
+      game_started: g.game_started || false,
     });
     const { data: q } = await supabase.from("queue").select("*").eq("table_id", tid).order("position");
     if (q) setQueue(q);
@@ -159,6 +162,62 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
 
   if (!tableId) return <div style={{ background: "#0d0d0f", minHeight: "100vh" }} />;
 
+  // Waiting screen
+  if (!game.game_started) {
+    return (
+      <div style={{
+        background: `linear-gradient(rgba(0,0,0,0.88), rgba(0,0,0,0.88)), url('/bg.jpg') center/cover no-repeat fixed`,
+        minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
+        fontFamily: "'Segoe UI', sans-serif",
+      }}>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        <div style={{ textAlign: "center" }}>
+          <div style={{
+            fontSize: "clamp(70px, 10vw, 140px)",
+            fontFamily: "'Times New Roman', serif",
+            fontWeight: 900, fontStyle: "italic", letterSpacing: 10, lineHeight: 1,
+            background: "linear-gradient(180deg, #ffffff 0%, #d4af37 40%, #ffffff 60%, #b8860b 100%)",
+            WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+            filter: "drop-shadow(0 0 30px rgba(212,175,55,0.5))",
+            marginBottom: 20
+          }}>JET7POOL</div>
+          <div style={{
+            display: "inline-block", background: "rgba(55,138,221,0.15)",
+            border: "1px solid rgba(55,138,221,0.3)", borderRadius: 20,
+            padding: "6px 24px", fontSize: 14, color: "#85B7EB",
+            letterSpacing: 4, textTransform: "uppercase", marginBottom: 50
+          }}>Table {tableId}</div>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+            <div style={{
+              width: 56, height: 56, borderRadius: "50%",
+              border: "3px solid rgba(212,175,55,0.2)",
+              borderTop: "3px solid rgba(212,175,55,0.8)",
+              animation: "spin 1.2s linear infinite",
+            }} />
+            <div style={{ fontSize: 16, color: "#555", letterSpacing: 5, textTransform: "uppercase" }}>
+              Waiting for players
+            </div>
+          </div>
+          {queue.length > 0 && (
+            <div style={{ marginTop: 48, display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+              <div style={{ width: "100%", fontSize: 10, color: "#333", letterSpacing: 4, textTransform: "uppercase", marginBottom: 12 }}>In queue</div>
+              {queue.map((q, idx) => (
+                <div key={q.id} style={{
+                  display: "flex", alignItems: "center", gap: 10, padding: "10px 20px", borderRadius: 20,
+                  background: idx === 0 ? "rgba(29,158,117,0.12)" : "rgba(255,255,255,0.03)",
+                  border: `1px solid ${idx === 0 ? "rgba(29,158,117,0.4)" : "rgba(255,255,255,0.06)"}`,
+                }}>
+                  <div style={{ width: 24, height: 24, borderRadius: "50%", background: idx === 0 ? "#1D9E75" : "#1a1a1a", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 600, color: "#fff" }}>{idx + 1}</div>
+                  <span style={{ fontSize: 14, color: idx === 0 ? "#1D9E75" : "#444", textTransform: "uppercase", letterSpacing: 2 }}>{q.name}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{
       background: `linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('/bg.jpg') center/cover no-repeat fixed`,
@@ -184,9 +243,7 @@ export default function DisplayPage({ params }: { params: Promise<{ id: string }
             WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
             filter: "drop-shadow(0 0 20px rgba(212,175,55,0.4))",
             textTransform: "uppercase",
-          }}>
-            JET7POOL
-          </div>
+          }}>JET7POOL</div>
           <div style={{ fontSize: 10, color: "#444", letterSpacing: 4, textTransform: "uppercase", marginTop: 4 }}>
             Table {tableId}
           </div>
